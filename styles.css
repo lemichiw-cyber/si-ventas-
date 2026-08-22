@@ -1,0 +1,526 @@
+/* ==========================================
+   DULCE ENCANTO — Stylesheet
+   Paleta: rosa (#FDEEF3, #F2A7C3, #E05C8A), morado (#9B6BB3, #5C3566), blanco (#FFF9FB)
+   Tipografía: Pacifico (logo), Quicksand (cuerpo)
+   Estilo: femenino, acogedor, artesanal
+   ========================================== */
+
+/* Variables CSS */
+:root {
+  --crema:#FFF7FA;
+  --rosa-suave:#FCE4EF;
+  --rosa:#F6A8C5;
+  --rosa-fuerte:#E86A9A;
+  --fucsia:#D94F82;
+  --morado:#8E5AA8;
+  --morado-profundo:#5C3566;
+  --tinta:#4A2B47;
+  --dorado:#F2B33D;
+  --transparencia:rgba(0,0,0,0.05);
+}
+
+/* Box-sizing global */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Body y fondo */
+body {
+  margin:0;
+  font-family:'Quicksand',system-ui,Helvetica,Arial,sans-serif;
+  background:var(--crema);
+  color:var(--tinta);
+  line-height:1.6;
+}
+
+/* ============ HEADER NAVBAR ============ */
+nav {
+  background:linear-gradient(120deg,var(--rosa-suave),var(--crema));
+  padding:12px 24px;
+  box-shadow:0 2px 8px var(--transparencia);
+  position:sticky;
+  top:0;
+  z-index=100;
+}
+.nav-container {
+  max-width:1200px;
+  margin:0 auto;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.logo {
+  font-family:'Pacifico',cursive;
+  font-size:28px;
+  color:var(--tinta);
+  text-decoration:none;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.logo .corazon {
+  color:#e86a9a;
+  font-size:30px;
+}
+.nav-links a {
+  margin-left:20px;
+  color:var(--tinta);
+  text-decoration:none;
+  font-weight:500;
+  transition:color 0.2s;
+}
+.nav-links a:hover { color:var(--rosa-fuerte); }
+.user-chip {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:var(--rosa-suave);
+  padding:6px 12px;
+  border-radius:20px;
+  font-size:12px;
+  color:var(--tinta);
+}
+.user-chip.oculto { display:none; }
+.cart-badge {
+  background:#e86a9a;
+  color:#fff;
+  border-radius:9999px;
+  padding:2px 6px;
+  font-size:11px;
+  margin-left:6px;
+  min-width:18px;
+  text-align:center;
+}
+
+/* ============ HERO / INICIO ============ */
+.hero {
+  min-height:400px;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 20%,rgba(252,238,243,0.8) 0,transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 80%,rgba(242,167,195,0.6) 0,transparent 50%),
+    linear-gradient(180deg,#fff9fb 0,#fdeeff 100%);
+  position:relative;
+  padding:60px 24px 40px;
+}
+.hero::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='glow'%3E%3CfeGaussianBlur stdDeviation='3'/%3E%3C/filter%3E%3Ccircle cx='300' cy='300' r='150' fill='%23F2A7C3' filter='url(%23glow)'/%3E%3C/svg%3E") no-repeat center/cover;
+  z-index:-1;
+}
+.hero h1 {
+  font-family:'Pacifico',cursive;
+  font-size:36px;
+  color:var(--tinta);
+  margin-bottom:12px;
+}
+.hero .eslogan {
+  color:var(--rosa-fuerte);
+  font-size:18px;
+  margin-bottom:24px;
+}
+.hero .cta-btn {
+  display:inline-block;
+  background:linear-gradient(135deg,var(--rosa-fuerte),var(--fucsia));
+  color:#fff;
+  padding:12px 24px;
+  border-radius:30px;
+  text-decoration:none;
+  font-weight:600;
+  margin-top:12px;
+  transition:transform 0.2s, box-shadow 0.2s;
+}
+.hero .cta-btn:hover {
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(232,106,154,0.3);
+}
+
+/* ============ SECCIONES ============ */
+.seccion {
+  max-width:1200px;
+  margin:60px auto;
+  padding:0 24px;
+}
+.seccion h2 {
+  font-size:24px;
+  color:var(--morado-profundo);
+  margin-bottom:24px;
+  padding-bottom:8px;
+  border-bottom:2px solid var(--rosa-suave);
+}
+.seccion p { margin-bottom:16px; }
+
+/* ============ CATÁLOGO ============ */
+.contenido {
+  max-width:1200px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+  gap;
+  gap:20px;
+}
+.card-producto {
+  background:#fff;
+  border-radius:18px;
+  padding:20px;
+  text-align:center;
+  transition:transform 0.2s, box-shadow 0.2s;
+  position:relative;
+}
+.card-producto:hover { transform:translateY(-4px); box-shadow:0 8px 20px rgba(138,91,168,0.15); }
+.card-producto.destacado { border:2px solid var(--fucsia); }
+.card-producto .badge {
+  position:absolute;
+  top:10px;
+  right:10px;
+  background:var(--rosa-fuerte);
+  color:#fff;
+  font-size:11px;
+  padding:2px 6px;
+  border-radius:10px;
+}
+.card-producto .badge.bajo { background:#e86a9a; }
+.card-producto .badge.agotado { background:#7c5b78; }
+.card-producto img {
+  width:100%;
+  height:180px;
+  object-fit:contain;
+  margin:0 auto 16px;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+}
+.card-producto .nombre {
+  font-weight:600;
+  margin:12px 0 4px;
+  color:var(--morado-profundo);
+}
+.card-producto .precio {
+  color:var(--rosa-fuerte);
+  font-weight:700;
+  margin-bottom:8px;
+}
+.card-producto .stock {
+  font-size:13px;
+  color:var(--tinta);
+  margin-bottom:12px;
+}
+.card-producto .btn-agregar {
+  width:100%;
+  background:linear-gradient(135deg,var(--rosa-fuerte),var(--fucsia));
+  color:#fff;
+  border:none;
+  padding:10px;
+  border-radius:10px;
+  font-weight:600;
+  cursor:pointer;
+  transition:opacity 0.2s;
+}
+.card-producto .btn-agregar:hover { opacity:0.9; }
+.card-producto .stock-alert {
+  margin-top:8px;
+  font-size:12px;
+  color:var(--rosa-fuerte);
+}
+
+/* ============ PRODUCTO FICHA ============ */
+.producto-ficha {
+  max-width:1200px;
+  margin:0 auto;
+  padding:40px 24px;
+  background:#fff;
+  border-radius:24px;
+  margin-top:-80px;
+  position:relative;
+  z-index:10;
+}
+.producto-ficha .imagen-principal {
+  width:100%;
+  max-height:300px;
+  object-fit:contain;
+  margin:0 auto 24px;
+  display:block;
+  border-radius:12px;
+}
+.producto-ficha h1 {
+  font-family:'Pacifico',cursive;
+  font-size:32px;
+  color:var(--morado-profundo);
+  margin-bottom:8px;
+}
+.producto-ficha .tagline {
+  color:var(--rosa-fuerte);
+  font-style:italic;
+  margin-bottom:20px;
+  display:inline-block;
+}
+.producto-ficha .precio {
+  color:var(--rosa-fuerte);
+  font-size:24px;
+  font-weight:700;
+}
+.producto-ficha .descripcion {
+  margin:20px 0;
+  line-height:1.7;
+}
+.producto-ficha .ingredientes {
+  background:var(--rosa-suave);
+  padding:12px 16px;
+  border-radius:10px;
+  margin:16px 0;
+  font-size:14px;
+}
+.producto-ficha .stock-info {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin:16px 0;
+}
+.producto-ficha .stock-info.disponible .cantidad { color:#27ae60; }
+.producto-ficha .stock-info.low .cantidad { color:#e86a9a; }
+.producto-ficha .stock-info.agotado .cantidad { color:#7c5b78; }
+.producto-ficha .cantidad-selector {
+  margin:16px 0;
+}
+.producto-ficha .cantidad-selector label {
+  display:block;
+  margin-bottom:6px;
+  font-weight:500;
+}
+.producto-ficha .cantidad-input {
+  width:60px;
+  padding:8px;
+  border:2px solid var(--rosa-suave);
+  border-radius:8px;
+  text-align:center;
+  font-size:14px;
+}
+.producto-ficha .btn-agregar-carrito {
+  width:100%;
+  background:linear-gradient(135deg,var(--rosa-fuerte),var(--fucsia));
+  color:#fff;
+  border:none;
+  padding:12px;
+  border-radius:10px;
+  font-weight:600;
+  cursor:pointer;
+  font-size:15px;
+  margin-top:8px;
+}
+
+/* ============ CARRITO ============ */
+.carrito-vacio,
+.carrito-con-items {
+  max-width:800px;
+  margin:40px auto;
+  padding:24px;
+  background:#fff;
+  border-radius:16px;
+}
+.carrito-vacio p { text-align:center; color:#7c5b78; margin-top:40px; }
+.carrito-item {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 0;
+  border-bottom:1px solid var(--rosa-suave);
+}
+.carrito-item .producto-nombre { flex:1; }
+.carrito-item .cantidad-control {
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+.carrito-item .cantidad-btn {
+  width:28px;
+  height:28px;
+  border:1px solid var(--rosa-suave);
+  border-radius:6px;
+  background:#fff;
+  cursor:pointer;
+  font-size:14px;
+}
+.carrito-item .cantidad-input {
+  width:36px;
+  height:28px;
+  border:1px solid var(--rosa-suave);
+  border-radius:6px;
+  text-align:center;
+  font-size:13px;
+}
+.carrito-resumen {
+  margin-top:24px;
+  padding-top:20px;
+  border-top:1px solid var(--rosa-suave);
+}
+.carrito-resumen .fila {
+  display:flex;
+  justify-content:space-between;
+  margin:8px 0;
+  font-size:14px;
+}
+.carrito-resumen .total {
+  font-weight:700;
+  font-size:18px;
+  color:var(--morado-profundo);
+}
+
+/* ============ CHECKOUT ============ */
+.checkout-form {
+  max-width:800px;
+  margin:0 auto;
+  padding:32px;
+  background:#fff;
+  border-radius:20px;
+}
+.checkout-form h2 {
+  margin-top:0;
+  color:var(--morado-profundo);
+}
+.form-group {
+  margin-bottom:20px;
+}
+.form-group label {
+  display:block;
+  margin-bottom:8px;
+  font-weight:500;
+  color:var(--tinta);
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width:100%;
+  padding:10px;
+  border:2px solid var(--rosa-suave);
+  border-radius:10px;
+  font-size:14px;
+}
+.form-group textarea {
+  min-height:100px;
+  resize:vertical;
+}
+.payment-methods {
+  display:flex;
+  gap:16px;
+  margin-top:20px;
+}
+.payment-methods label {
+  flex:1;
+  padding:10px;
+  background:var(--rosa-suave);
+  border-radius:10px;
+  cursor:pointer;
+  text-align:center;
+}
+.payment-methods input {
+  display:none;
+}
+.payment-methods input:checked+label {
+  background:linear-gradient(135deg,var(--rosa-fuerte),var(--fucsia));
+  color:#fff;
+}
+.btn-finalizar {
+  width:100%;
+  background:linear-gradient(135deg,var(--rosa-fuerte),var(--fucsia));
+  color:#fff;
+  border:none;
+  padding:12px;
+  border-radius:10px;
+  font-weight:600;
+  font-size:15px;
+  cursor:pointer;
+  margin-top:24px;
+}
+
+/* ============ NOSOTROS ============ */
+.nosotros-contenido {
+  max-width:1200px;
+  margin:0 auto;
+}
+.nosotros-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:40px;
+  margin-top:30px;
+}
+.nosotros-grid .valores {
+  background:var(--rosa-suave);
+  padding:24px;
+  border-radius:16px;
+}
+.nosotros-grid .valores h3 {
+  margin-top:0;
+  color:var(--morado-profundo);
+  font-size:18px;
+}
+.nosotros-grid .valores ul {
+  padding-left:20px;
+}
+.nosotros-grid .imagen {
+  text-align:center;
+}
+.nosotros-grid .imagen img {
+  max-width:100%;
+  border-radius:12px;
+  margin-top:20px;
+}
+
+/* ============ CONTACTO ============ */
+.contacto-info {
+  max-width:1200px;
+  margin:0 auto;
+}
+.contacto-card {
+  background:var(--rosa-suave);
+  padding:24px;
+  border-radius:16px;
+  margin:16px 0;
+}
+.contacto-card h3 {
+  margin-top:0;
+  color:var(--morado-profundo);
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width:768px) {
+  .nav-container { flex-direction:column; gap:12px; }
+  .nav-links { width:100%; justify-content:center; }
+  .seccion { margin:40px 16px; }
+  .hero { padding:40px 16px 24px; }
+  .hero h1 { font-size:28px; }
+  .contenido { grid-template-columns:1fr; }
+  .nosotros-grid { grid-template-columns:1fr; }
+  .producto-ficha { margin-top:0; border-radius:16px; }
+}
+@media (max-width:480px) {
+  .hero .cta-btn { width:100%; text-align:center; }
+  .checkout-form { padding:16px; }
+  .footer-links a { display:block; margin:8px 0; }
+}
+
+/* ============ ANIMACIONES ============ */
+@keyframes bounce {
+  0%,100% { transform:translateY(0); }
+  50% { transform:translateY(-4px); }
+}
+@keyframes fly-to-cart {
+  0% { opacity:1; transform:scale(1) translateX(0); }
+  100% { opacity:0; transform:scale(0.5) translateX(-100px) translateY(80px); }
+}
+.toast {
+  position:fixed;
+  bottom:24px;
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--morado);
+  color:#fff;
+  padding:12px 20px;
+  border-radius:10px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);
+  z-index:10000;
+  animation:bounce 0.5s ease-out;
+}
+
+/* ============ TOAST CONTAINER ============ */
+#toast-container { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:9999; }
+
+/* ============ FADE IN ON SCROLL ============ */
+.reveal { opacity:0; transform:translateY(20px); transition:opacity 0.6s ease, transform 0.6s ease; }
+.reveal.visible { opacity:1; transform:translateY(0); }
