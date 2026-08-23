@@ -90,6 +90,8 @@ function sembrar() {
   console.log('🍓 Sembrando datos base...');
   db.exec('BEGIN');
 
+  const prodIds = [];
+
   // Usuarios: admin + cliente
   const phA = hashPassword('Admin123*');
   const phC = hashPassword('Cliente123*');
@@ -114,11 +116,11 @@ const insPro = db.prepare(
   );
   for (const [slug, nombre, tagline, stock] of prods) {
     const img = slug.split('-')[0]; // fresa, mora, durazno, mango, mixta, guayaba
-    const [row] = insPro.get(slug, nombre, tagline, 2.50, 1.70, img, stock);
-    prodIds.push(row.id);
-    // Movimiento inicial de stock
-    db.prepare('INSERT INTO movimientos_stock (producto_id,tipo,cantidad,stock_resultante,referencia,creado_en) VALUES (?,\'inicial\',?,?,?)')
-      .run(row.id, 'inicial', stock, stock, 'Carga inicial', fecha(28));
+    const row = insPro.run(slug, nombre, tagline, 2.50, 1.70, img, stock);
+    const productoId = Number(row.lastInsertRowid);
+    prodIds.push(productoId);
+    db.prepare('INSERT INTO movimientos_stock (producto_id,tipo,cantidad,stock_resultante,referencia) VALUES (?,\'inicial\',?,?,?)')
+      .run(productoId, stock, stock, 'Carga inicial');
   }
 
   db.exec('COMMIT');

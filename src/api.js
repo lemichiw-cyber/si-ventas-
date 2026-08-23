@@ -1,10 +1,19 @@
+import crypto from 'node:crypto';
 import { db } from './db.js';
 import { CONFIG } from './config.js';
 import { verificarPassword, verificarToken, usuarioDePeticion } from './auth.js';
-import { HttpError, Router } from './http.js';
+import { HttpError, Router, leerCuerpo } from './http.js';
 import { reintentarPendientes, notificarNuevoPedido, registrarEmail } from './mailer.js';
 
 const router = new Router();
+
+const red2 = (n) => Math.round(n * 100) / 100;
+const fecha = () => new Date().toISOString().slice(0, 19).replace('T', ' ');
+function emitirToken(payload, horas = 24) {
+  const cuerpo = { ...payload, exp: Math.floor(Date.now() / 1000) + horas * 3600 };
+  const data = b64u(JSON.stringify(cuerpo));
+  return `${data}.${firmaToken(data)}`;
+}
 
 const b64u = (data) => Buffer.from(data).toString('base64url');
 const firmaToken = (data) => {
@@ -55,7 +64,7 @@ router.get('/config', (ctx) => {
 router.get('/productos', (ctx) => {
   const destacados = String(ctx.request.query?.destacados) === '1';
   const q = String(ctx.request.query?.q || '').toLowerCase().trim();
-  const sqlBase = `SELECT p.*, (p.stock < p.stock_minimo) AS bajoStock FROM productos p WHERE 1=1`;
+  let sqlBase = `SELECT p.*, (p.stock < p.stock_minimo) AS bajoStock FROM productos p WHERE 1=1`;
   const params = [];
   if (destacados) {
     sqlBase += ' AND p.destacado = 1';
@@ -92,13 +101,36 @@ router.post('/auth/registro', async (ctx) => {
       'INSERT INTO usuarios (nombre, email, password_hash, rol, telefono, direccion, creado_en) VALUES (?,?,?,?,?,?,?)'
     ).run(nombre, email, hashPassword(password), 'cliente', body.telefono || '', body.direccion || '', fecha());
     // Token simple de bienvenida (demo)
-    const payload = { id: db.lastInsertRowid, rol: 'cliente', nombre: nombre, exp: Math.floor(Date.now() / 1000) + 24 * 3600 };
-    const token = Buffer.from(JSON.stringify(payload)).toString('base64url');
+    const token = emitirToken({ id: Number(db.lastInsertRowid), rol: 'cliente', nombre });
     ctx.json(201, { token, usuario: { id: db.lastInsertRowid, nombre, email, rol: 'cliente' } });
   } catch (e) {
     if (e instanceof HttpError) throw e;
     throw new HttpError(500, 'Error interno — email ya registrado');
   }
+});
+
+// 5a. Login de administrador
+router.post('/auth/admin', async (ctx) => {
+  const body = await leerCuerpo(ctx.req);
+  const usuario = db.prepare('SELECT * FROM usuarios WHERE email=?').get(body.email);
+  if (!usuario || usuario.rol !== 'admin' || !verificarPassword(body.password, usuario.password_hash)) {
+    throw new HttpError(401, 'Credenciales de administrador incorrectas');
+  }
+  const token = emitirToken({ id: usuario.id, rol: 'admin', nombre: usuario.nombre }, 12);
+  ctx.json(200, { token, usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: 'admin' } });
+});
+
+// SSE público: actualizaciones de stock para el catálogo
+router.get('/eventos', (ctx) => {
+  const res = ctx.res;
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive'
+  });
+  res.write(`event: connected\ndata: {"ok":true}\n\n`);
+  SSE_CLIENTES.add({ res, admin: false });
+  ctx.req.on('close', () => SSE_CLIENTES.delete({ res, admin: false }));
 });
 
 // 5. Login cliente
@@ -109,9 +141,7 @@ router.post('/auth/login', async (ctx) => {
     throw new HttpError(401, 'Correo o contraseña incorrectos');
   }
   if (usuario.rol === 'admin') throw new HttpError(401, 'Use el login de administrador');
-  // Generar token simple (demo: base64 de id+rol+expiración)
-  const payload = { id: usuario.id, rol: usuario.rol, nombre: usuario.nombre, exp: Math.floor(Date.now() / 1000) + 24 * 3600 };
-  const token = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const token = emitirToken({ id: usuario.id, rol: usuario.rol, nombre: usuario.nombre });
   ctx.json(200, { token, usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol } });
 });
 
@@ -166,16 +196,17 @@ router.post('/pedidos', async (ctx) => {
   const impuesto = red2(sub * CONFIG.IVA);
   const envio = sub >= CONFIG.ENVIO_GRATIS_DESDE ? 0 : CONFIG.COSTO_ENVIO;
   const total = red2(sub + impuesto + envio);
-  const numero = `DE-${new Date().getFullYear()}-${String(db.lastInsertRowid + 1).padStart(5, '0')}`; // provisorio
+  const siguiente = db.prepare('SELECT COUNT(*) AS n FROM pedidos').get().n + 1;
+  const numero = `DE-${new Date().getFullYear()}-${String(siguiente).padStart(5, '0')}`;
 
   db.exec('BEGIN');
   try {
     // Insertar pedido (temporal, numero se llena luego)
     const insPedido = db.prepare(
       `INSERT INTO pedidos (numero,cliente_nombre,cliente_email,cliente_telefono,cliente_direccion,metodo_pago,subtotal,impuesto,envio,total,estado,creado_en)
-       VALUES ('${numero}',?,?,?,?,?,?,?,?,?,?,?)`
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
     );
-    const pedidoId = insPedido.run(cliente_nombre, cliente_email, cliente_telefono, cliente_direccion, metodo_pago || 'efectivo', sub, impuesto, envio, total, 'pendiente', fecha()).lastInsertRowid;
+    const pedidoId = insPedido.run(numero, cliente_nombre, cliente_email, cliente_telefono || '', cliente_direccion || '', metodo_pago || 'efectivo', sub, impuesto, envio, total, 'pendiente', fecha()).lastInsertRowid;
 
     // Insertar ítems y decrementar stock
     const insItem = db.prepare(
@@ -187,11 +218,11 @@ router.post('/pedidos', async (ctx) => {
     );
 
     for (const it of items) {
-      const p = db.prepare('SELECT id, nombre, precio, costo, stock FROM productos WHERE id=?').get(it.producto_id);
+      const p = db.prepare('SELECT id, slug, nombre, precio, costo, stock, stock_minimo FROM productos WHERE id=?').get(it.producto_id);
       insItem.run(pedidoId, p.id, p.nombre, p.slug.split('-')[0] || 'fresa', p.precio, p.costo, it.cantidad, red2(it.cantidad * 0.8));
       updStock.run(it.cantidad, p.id);
       const nuevoStock = p.stock - it.cantidad;
-      movVenta.run(p.id, -it.cantidad, nuevoStock, numero, null, fecha());
+      movVenta.run(p.id, -it.cantidad, nuevoStock, numero, fecha());
       // Broadcast stock actualizado
       difundir('stock', { producto_id: p.id, producto_nombre: p.nombre, stock: nuevoStock, bajoStock: nuevoStock < p.stock_minimo, referencia: numero });
       // Si cruzó al bajo stock, alerta admin
@@ -201,7 +232,7 @@ router.post('/pedidos', async (ctx) => {
     }
 
     // Actualizar número de orden (ya hay id)
-    db.prepare('UPDATE pedidos SET numero=? WHERE id=?').run(numero, pedidoId);
+    
 
     // Email notification async
     notificarNuevoPedido({ numero, cliente_nombre, cliente_email, cliente_telefono, cliente_direccion, metodo_pago, subtotal, impuesto, envio, total, notas }, items);
@@ -305,6 +336,7 @@ router.get('/admin/eventos', (ctx) => {
 
 // Dashboard resumen
 router.get('/admin/resumen', (ctx) => {
+  requireAdmin(ctx);
   const kpis = db.prepare(`
     SELECT
       (SELECT COUNT(*) FROM pedidos WHERE estado != 'cancelado') AS pedidos_totales,
@@ -384,6 +416,7 @@ router.get('/admin/resumen', (ctx) => {
 
 // Pedidos: listar (con filtro opcional por estado)
 router.get('/admin/pedidos', (ctx) => {
+  requireAdmin(ctx);
   const filtro = String(ctx.request.query?.estado || '');
   let sql = 'SELECT p.id, p.numero, p.cliente_nombre, p.cliente_email, p.cliente_telefono, p.metodo_pago, p.subtotal, p.impuesto, p.envio, p.total, p.estado, p.creado_en, pi.cantidad, pi.nombre_producto FROM pedidos p LEFT JOIN pedido_items pi ON pi.pedido_id = p.id WHERE 1=1';
   const params = [];
@@ -425,8 +458,9 @@ router.get('/admin/pedidos', (ctx) => {
 
 // PATCH actualizar estado de pedido
 router.patch('/admin/pedidos/:id/estado', async (ctx) => {
-  const { id } = ctx.params;
   const body = await leerCuerpo(ctx.req);
+  requireAdmin(ctx);
+  const { id } = ctx.params;
   const { estado } = body;
   if (!['pendiente', 'pagado', 'enviado', 'entregado', 'cancelado'].includes(estado)) {
     throw new HttpError(400, 'Estado inválido; use: pendiente|pagado|enviado|entregado|cancelado');
@@ -453,7 +487,7 @@ router.patch('/admin/pedidos/:id/estado', async (ctx) => {
 
 // POST nuevo producto
 router.post('/admin/productos', async (ctx) => {
-  const body = await leerCuerpo(ctx.req);
+  requireAdmin(ctx);
   const { nombre, tagline, descripcion, ingredientes, precio, costo, imagen, destacado, disponible, stock_minimo } = body;
   if (!nombre) throw new HttpError(400, 'Nombre obligatorio');
   const slug = body.slug || nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'producto';
@@ -474,6 +508,7 @@ router.post('/admin/productos', async (ctx) => {
 
 // PUT editar producto (parcial)
 router.put('/admin/productos/:id', async (ctx) => {
+  requireAdmin(ctx);
   const { id } = ctx.params;
   const body = await leerCuerpo(ctx.req);
   const campos = ['nombre', 'tagline', 'descripcion', 'ingredientes', 'precio', 'costo', 'imagen', 'disponible', 'destacado', 'stock_minimo', 'slug'];
@@ -494,6 +529,7 @@ router.put('/admin/productos/:id', async (ctx) => {
 
 // DELETE producto (soft: set disponible=0 si hay referencias; hard si no)
 router.delete('/admin/productos/:id', (ctx) => {
+  requireAdmin(ctx);
   const { id } = ctx.params;
   const referenciado = db.prepare('SELECT COUNT(*) AS c FROM pedido_items WHERE producto_id=?').get(Number(id)).c;
   if (referenciado > 0) {
@@ -507,6 +543,7 @@ router.delete('/admin/productos/:id', (ctx) => {
 
 // PATCH stock producto (delta o cantidad absoluta, con motivo)
 router.patch('/admin/productos/:id/stock', async (ctx) => {
+  requireAdmin(ctx);
   const { id } = ctx.params;
   const body = await leerCuerpo(ctx.req);
   const { delta, cantidad, motivo } = body;
@@ -546,6 +583,7 @@ router.patch('/admin/productos/:id/stock', async (ctx) => {
 
 // Inventario movimientos recientes
 router.get('/admin/movimientos', (ctx) => {
+  requireAdmin(ctx);
   const limit = Number(ctx.request.query?.limit) || 20;
   const rows = db.prepare(`
     SELECT ms.id, ms.tipo, ms.cantidad, ms.stock_resultante, ms.referencia, ms.creado_en,
@@ -560,6 +598,7 @@ router.get('/admin/movimientos', (ctx) => {
 
 // Clientes (lista resumida)
 router.get('/admin/clientes', (ctx) => {
+  requireAdmin(ctx);
   const rows = db.prepare(`
     SELECT u.id, u.nombre, u.email, u.telefono, u.direccion, u.rol, u.creado_en,
            COUNT(p.id) AS pedidos_count, COALESCE(SUM(p.total),0) AS total_gastado
@@ -573,6 +612,7 @@ router.get('/admin/clientes', (ctx) => {
 
 // Emails (lista + reenviar)
 router.get('/admin/emails', (ctx) => {
+  requireAdmin(ctx);
   const limit = Number(ctx.request.query?.limit) || 20;
   const rows = db.prepare(
     `SELECT id, para, asunto, estado, referencia, creado_en, enviado_en FROM emails ORDER BY id DESC LIMIT ?`
@@ -582,6 +622,7 @@ router.get('/admin/emails', (ctx) => {
 
 // Reenviar email pendiente
 router.post('/admin/emails/:id/reenviar', (ctx) => {
+  requireAdmin(ctx);
   const { id } = ctx.params;
   const email = db.prepare('SELECT * FROM emails WHERE id=?').get(Number(id));
   if (!email) throw new HttpError(404, 'Email no encontrado');

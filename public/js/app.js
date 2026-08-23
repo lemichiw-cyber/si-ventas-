@@ -21,12 +21,12 @@ const toastContainer = $('#toast-container') || (() => { const d = document.crea
 
 // --- Utilidades ---
 const fmtDinero = (n) => `$${Number(n).toFixed(2)}`;
-const esc = (t = '') => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&', '<': '<', '>': '>', '"': '"', "'": ''' }[c]));
+const esc = (t = '') => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const showToast = (msg, tipo = 'éxito') => {
   const tipoMap = { éxito: 'var(--morado)', error: '#e53e3e', warning: '#d65d0e' };
   const toast = document.createElement('div');
   toast.className = 'toast';
-  toast.style.background = tipoMap[tipo] || var(--morado);
+  toast.style.background = tipoMap[tipo] || 'var(--morado)';
   toast.textContent = msg;
   toastContainer.appendChild(toast);
   setTimeout(() => toast.remove(), 3000);
@@ -120,7 +120,7 @@ const actualizarCarritoDOM = () => {
     resDiv.className = 'carrito-resumen';
     resDiv.innerHTML = `<div class="fila"><span>Subtotal</span>${fmtDinero(total)}</div><div class="total">Total: ${fmtDinero(total)}</div>`;
     document.querySelector('#carrito-contenido')?.appendChild(resDiv);
-  }
+  };
 };
 
 const agregarAlCarrito = (productoSlug, cantidad = 1) => {
@@ -290,7 +290,7 @@ const inicio = () => {
       const slug = btn.getAttribute('data-slug');
       agregarAlCarrito(slug);
     });
-  }
+  });
 };
 
 const catalogo = () => {
@@ -646,30 +646,13 @@ const registroView = () => {
 };
 
 // --- Dashboard Admin ---
-const adminView = () => {
-  // Verificar que sea admin
+const adminView = async () => {
+  // Doble capa frontend: sin rol admin ni siquiera se carga la vista
   if (!estado.usuario || estado.usuario.rol !== 'admin') {
     showToast('Acceso denegado - se requiere rol de administrador', 'error');
     window.location.hash = '#/';
     return;
   }
-
-  // Credenciales admin: admin@dulceencanto.com / Admin123*
-  const loginAdmin = async () => {
-    const data = await api('/auth/login', {
-      method: 'POST',
-      body: { email: 'admin@dulceencanto.com', password: 'Admin123*' }
-    });
-    if (data.usuario.rol === 'admin') {
-      estado.token = data.token;
-      estado.usuario = data.usuario;
-      localStorage.setItem('dulce-token', data.token);
-      localStorage.setItem('dulce-usuario', JSON.stringify(data.usuario));
-      updateUI();
-    }
-  };
-
-  loginAdmin();
 
   $('#app').innerHTML = `
     <section class="seccion" style="max-width:1200px;margin:0 auto;padding:20px 0;">
@@ -677,79 +660,141 @@ const adminView = () => {
         <h2>Panel de Administración Dulce Encanto</h2>
         <p>Bienvenida, ${estado.usuario.nombre}</p>
       </div>
+      <div id="admin-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;"></div>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
-        <!-- KPI Cards -->
-        <div style="background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 6px var(--transparencia);">
-          <div style="font-size:24px;color:var(--morado-profundo);">$${75.20}</div>
-          <div style="font-size:14px;color:var(--tinta);">Ganancia Estimada</div>
-          <div style="font-size:12px;color:var(--morado);">× 94 frascos × $0.80</div>
-        </div>
-        <div style="background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 6px var(--transparencia);">
-          <div style="font-size:24px;color:var(--tinta);">12</div>
-          <div style="font-size:14px;color:var(--tinta);">Pedidos Totales</div>
-          <div style="font-size:12px;color:var(--morado);">Histórico de ventas</div>
-        </div>
-        <div style="background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 6px var(--transparencia);">
-          <div style="font-size:24px;color:var(--tinta);">94</div>
-          <div style="font-size:14px;color:var(--tinta);">Frascos Vendidos</div>
-          <div style="font-size:12px;color:var(--morado);">Unidades totales</div>
-        </div>
-      </div>
-
-      <!-- Gráficos -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:32px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;margin-top:32px;">
         <div>
-          <h3 style="margin:0 0 12px 0;color:var(--morado-profundo);">Ventas por Últimos 14 Días</h3>
-          <div id="chart-ventas-dia" style="height:150px;background:#fff;padding:16px;border-radius:8px;"></div>
+          <h3 style="margin:0 0 12px 0;color:var(--morado-profundo);">Ventas últimos 14 días ($)</h3>
+          <div id="chart-ventas-dia" style="height:170px;background:#fff;padding:16px;border-radius:12px;"></div>
         </div>
         <div>
-          <h3 style="margin:0 0 12px 0;color:var(--morado-profundo);">Top Sabores Vendidos</h3>
-          <div id="chart-top-sabores" style="height:150px;background:#fff;padding:16px;border-radius:8px;"></div>
+          <h3 style="margin:0 0 12px 0;color:var(--morado-profundo);">Top sabores (unidades)</h3>
+          <div id="chart-top-sabores" style="height:170px;background:#fff;padding:16px;border-radius:12px;"></div>
         </div>
       </div>
 
-      <!-- Stock Bajo -->
-      <div style="margin-top:32px;background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 6px var(--transparencia);">
-        <h3 style="margin:0 0 12px 0;color:var(--morado-profundo);">Stock Bajo (alerta)</h3>
-        <p style="color:#e86a9a;font-size:14px;">Quedan pocas unidades de: Frutal Mixta (3 unidades)</p>
-      </div>
+      <div id="admin-stock-bajo" style="margin-top:32px;background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 6px var(--transparencia);"></div>
 
-      <!-- Últimos Pedidos -->
-      <div style="margin-top:32px;background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 6px var(--transparencia);">
-        <h3 style="margin:0 0 12px 0;color:var(--morado-profundo);">Últimos Pedidos</h3>
-        <p>Ver historial en la API: <code>/api/admin/pedidos</code></p>
-      </div>
-    </div>
+      <h3 style="margin:32px 0 12px 0;color:var(--morado-profundo);">Productos · ajuste de stock</h3>
+      <div id="admin-productos" style="background:#fff;padding:8px;border-radius:12px;overflow-x:auto;"></div>
+
+      <h3 style="margin:32px 0 12px 0;color:var(--morado-profundo);">Pedidos</h3>
+      <div id="admin-pedidos" style="background:#fff;padding:8px;border-radius:12px;overflow-x:auto;"></div>
+    </section>
   `;
 
-  // Inicializar gráficos
-  setTimeout(() => {
-    graficoBarras('chart-ventas-dia', [
-      { etiqueta: 'Día 1', valor: 120 },
-      { etiqueta: 'Día 2', valor: 95 },
-      { etiqueta: 'Día 3', valor: 140 },
-      { etiqueta: 'Día 4', valor: 80 },
-      { etiqueta: 'Día 5', valor: 110 },
-      { etiqueta: 'Día 6', valor: 130 },
-      { etiqueta: 'Día 7', valor: 90 },
-      { etiqueta: 'Día 8', valor: 115 },
-      { etiqueta: 'Día 9', valor: 100 },
-      { etiqueta: 'Día 10', valor: 125 },
-      { etiqueta: 'Día 11', valor: 85 },
-      { etiqueta: 'Día 12', valor: 135 },
-      { etiqueta: 'Día 13', valor: 98 },
-      { etiqueta: 'Día 14', valor: 110 }
-    ]);
-    graficoBarras('chart-top-sabores', [
-      { etiqueta: 'Fresa Clásica', valor: 45 },
-      { etiqueta: 'Mora Andina', valor: 38 },
-      { etiqueta: 'Durazno Dorado', valor: 32 },
-      { etiqueta: 'Mango Tropical', valor: 28 },
-      { etiqueta: 'Frutal Mixta', valor: 22 }
-    ]);
-  }, 100);
+  try {
+    const r = await api('/admin/resumen');
+    const { kpis, ventas_por_dia, top_sabores, bajo_stock, ultimos_pedidos } = r;
+
+    const fmt = (n) => '$' + Number(n).toFixed(2);
+    $('#admin-kpis').innerHTML = [
+      [fmt(kpis.ganancia_total), 'Ganancia total', `${kpis.unidades_vendidas} frascos vendidos`],
+      [kpis.pedidos_totales, 'Pedidos totales', 'Histórico de ventas'],
+      [kpis.unidades_vendidas, 'Frascos vendidos', 'Unidades totales'],
+      [fmt(kpis.ventas_totales), 'Facturación', 'Sin cancelados']
+    ].map(([v, t, sub]) => `
+      <div style="background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 6px var(--transparencia);">
+        <div style="font-size:26px;font-weight:bold;color:var(--morado-profundo);">${v}</div>
+        <div style="font-size:14px;color:var(--tinta);">${t}</div>
+        <div style="font-size:12px;color:var(--morado);">${sub}</div>
+      </div>`).join('');
+
+    graficoLineas('chart-ventas-dia',
+      ventas_por_dia.map((d) => ({ etiqueta: d.fecha.slice(5), valor: d.ventas }))
+    );
+    graficoBarras('chart-top-sabores',
+      top_sabores.map((t) => ({ etiqueta: t.nombre_producto.split(' ')[0], valor: t.unidades }))
+    );
+
+    $('#admin-stock-bajo').innerHTML = bajo_stock.length === 0
+      ? '<h3>Stock saludable ✅</h3><p style="color:var(--morado);font-size:14px;">Ningún producto por debajo del mínimo.</p>'
+      : `<h3>Stock Bajo ⚠️</h3><ul style="margin:8px 0 0 18px;">${bajo_stock.map((p) =>
+          `<li style="color:#c0397b;font-size:14px;padding:2px 0;">${p.nombre}: quedan ${p.stock} unidades (mínimo ${p.stock_minimo})</li>`).join('')}</ul>`;
+
+    cargarTablaPedidos();
+    cargarTablaProductos();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
 };
+
+async function cargarTablaPedidos() {
+  const cont = $('#admin-pedidos');
+  try {
+    const pedidos = await api('/admin/pedidos');
+    const estados = ['pendiente', 'pagado', 'enviado', 'entregado', 'cancelado'];
+    if (pedidos.length === 0) {
+      cont.innerHTML = '<p style="padding:16px;color:var(--morado);">Aún no hay pedidos.</p>';
+      return;
+    }
+    cont.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:14px;">
+      <thead><tr style="text-align:left;color:var(--morado);">
+      <th style="padding:10px;">Número</th><th style="padding:10px;">Cliente</th>
+      <th style="padding:10px;">Total</th><th style="padding:10px;">Estado</th></tr></thead>
+      <tbody>${pedidos.map((p) => `
+        <tr style="border-top:1px solid #f3e8ef;">
+          <td style="padding:10px;"><strong>${p.numero}</strong></td>
+          <td style="padding:10px;">${p.cliente_nombre}</td>
+          <td style="padding:10px;">$${Number(p.total).toFixed(2)}</td>
+          <td style="padding:10px;">
+            <select data-id="${p.id}" class="pedido-estado" style="padding:4px 8px;border-radius:8px;border:1px solid var(--rosa);">
+              ${estados.map((e) => `<option ${e === p.estado ? 'selected' : ''}>${e}</option>`).join('')}
+            </select>
+          </td>
+        </tr>`).join('')}</tbody></table>`;
+    cont.querySelectorAll('.pedido-estado').forEach((sel) => {
+      sel.addEventListener('change', async () => {
+        try {
+          await api(`/admin/pedidos/${sel.dataset.id}/estado`, { method: 'PATCH', body: { estado: sel.value } });
+          showToast(`Pedido #${sel.dataset.id} → ${sel.value}`, 'success');
+        } catch (e) {
+          showToast(e.message, 'error');
+        }
+      });
+    });
+  } catch (e) {
+    cont.innerHTML = `<p style="padding:16px;color:#c0397b;">${e.message}</p>`;
+  }
+}
+
+async function cargarTablaProductos() {
+  const cont = $('#admin-productos');
+  try {
+    const productos = await api('/productos');
+    cont.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:14px;">
+      <thead><tr style="text-align:left;color:var(--morado);">
+      <th style="padding:10px;">Producto</th><th style="padding:10px;">Precio</th>
+      <th style="padding:10px;">Stock</th><th style="padding:10px;">Ajustar</th></tr></thead>
+      <tbody>${productos.map((p) => `
+        <tr style="border-top:1px solid #f3e8ef;">
+          <td style="padding:10px;"><strong>${p.nombre}</strong></td>
+          <td style="padding:10px;">$${Number(p.precio).toFixed(2)}</td>
+          <td style="padding:10px;" data-stock="${p.id}">${p.stock}</td>
+          <td style="padding:10px;white-space:nowrap;">
+            <button class="stock-btn" data-id="${p.id}" data-delta="-1" style="cursor:pointer;border:none;background:#fce4ef;border-radius:6px;padding:4px 10px;">−1</button>
+            <button class="stock-btn" data-id="${p.id}" data-delta="1" style="cursor:pointer;border:none;background:#e8f6ef;border-radius:6px;padding:4px 10px;margin-left:6px;">+1</button>
+          </td>
+        </tr>`).join('')}</tbody></table>`;
+    cont.querySelectorAll('.stock-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        try {
+          const r = await api(`/admin/productos/${btn.dataset.id}/stock`, {
+            method: 'PATCH',
+            body: { delta: Number(btn.dataset.delta), referencia: 'ajuste manual panel' }
+          });
+          const celda = cont.querySelector(`[data-stock="${btn.dataset.id}"]`);
+          if (celda) celda.textContent = r.stock;
+          showToast('Stock actualizado', 'success');
+        } catch (e) {
+          showToast(e.message, 'error');
+        }
+      });
+    });
+  } catch (e) {
+    cont.innerHTML = `<p style="padding:16px;color:#c0397b;">${e.message}</p>`;
+  }
+}
 
 // --- Helpers varios ---
 const red2 = (n) => Math.round(n * 100) / 100;
