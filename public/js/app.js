@@ -22,13 +22,26 @@ const toastContainer = $('#toast-container') || (() => { const d = document.crea
 // --- Utilidades ---
 const fmtDinero = (n) => `$${Number(n).toFixed(2)}`;
 const esc = (t = '') => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ICONOS_TOAST = { éxito: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+let toastActivo = null;
 const showToast = (msg, tipo = 'éxito') => {
-  const tipoMap = { éxito: 'var(--morado)', error: '#e53e3e', warning: '#d65d0e' };
+  // Un solo toast visible a la vez (el anterior se descarga al instante)
+  if (toastActivo) toastActivo.remove();
+  clearTimeout(toastActivo && toastActivo._t);
+  const icono = ICONOS_TOAST[tipo] || ICONOS_TOAST['éxito'];
   const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.style.background = tipoMap[tipo] || 'var(--morado)';
-  toast.textContent = msg;
+  toast.className = `toast toast-${tipo}`;
+  toast.setAttribute('role', 'status');
+  toast.innerHTML = `<span class="toast-icono">${icono}</span><span>${esc(msg)}</span>`;
+  toast.querySelector('.toast-icono').addEventListener('click', () => cerrarToast(toast));
+  toastActivo = toast;
   toastContainer.appendChild(toast);
+  toast._t = setTimeout(() => cerrarToast(toast), 3200);
+  function cerrarToast(t) {
+    if (!t.isConnected) return;
+    t.classList.add('toast-salida');
+    setTimeout(() => t.remove(), 260);
+  }
   setTimeout(() => toast.remove(), 3000);
 };
 
@@ -798,6 +811,11 @@ async function cargarTablaProductos() {
 
 // --- Helpers varios ---
 const red2 = (n) => Math.round(n * 100) / 100;
+
+// PWA: registrar service worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+}
 
 // --- Inicio ---
 const init = () => {

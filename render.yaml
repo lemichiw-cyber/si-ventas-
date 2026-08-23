@@ -1,0 +1,16 @@
+services:
+  # Tienda completa: Node sirve el frontend y la API en un solo puerto
+  - type: web
+    name: dulce-encanto
+    runtime: node
+    plan: free
+    buildCommand: "true"
+    startCommand: npm start
+    healthCheckPath: /api/config
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: EMAIL_SIMULADO
+        value: "true"

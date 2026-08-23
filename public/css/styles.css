@@ -524,3 +524,38 @@ nav {
 /* ============ FADE IN ON SCROLL ============ */
 .reveal { opacity:0; transform:translateY(20px); transition:opacity 0.6s ease, transform 0.6s ease; }
 .reveal.visible { opacity:1; transform:translateY(0); }
+/* Toasts: icono circular + salida suave */
+.toast {
+  display:flex; align-items:center; gap:10px;
+  position:fixed; bottom:24px; left:50%;
+  transform:translateX(-50%);
+  background:var(--morado); color:#fff;
+  padding:12px 18px; border-radius:14px;
+  box-shadow:0 6px 20px rgba(0,0,0,.22);
+  z-index:10000; max-width:min(92vw,420px);
+  font-size:14px; font-weight:500;
+  animation:bounce .45s ease-out;
+}
+.toast-error   { background:#e53e3e; }
+.toast-warning { background:#d65d0e; }
+.toast-info    { background:#2563eb; }
+.toast-icono {
+  flex-shrink:0; width:24px; height:24px; border-radius:50%;
+  background:rgba(255,255,255,.25); display:flex;
+  align-items:center; justify-content:center;
+  font-size:13px; font-weight:bold; cursor:pointer;
+}
+.toast-salida { opacity:0; transform:translateX(-50%) translateY(8px); transition:.25s ease-in; }
+@media (prefers-reduced-motion: reduce) { .toast { animation:none; } }
+
+/* Safe-areas para modo app instalada (notch / barra gestual) */
+body {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+/* Tablas y contenedores anchos: scroll horizontal en móvil */
+@media (max-width: 640px) {
+  table { display: block; overflow-x: auto; }
+  .seccion { padding-left: 12px; padding-right: 12px; }
+  #toast-container { width: calc(100vw - 24px); }
+}
