@@ -79,6 +79,13 @@ function servirStaticos(req, res, url) {
   servirArchivo(res, filepath, MIMETYPES[path.extname(filepath)] || MIMETYPES['.html']);
 }
 
+// Límite de intentos de autenticación por IP (en memoria, sin dependencias)
+const intentosAuth = new Map();
+setInterval(() => {
+  const ahora = Date.now();
+  for (const [ip, r] of intentosAuth) if (ahora > r.reset) intentosAuth.delete(ip);
+}, 60_000).unref();
+
 const servidorHttp = createServer((req, res) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
@@ -92,6 +99,22 @@ const servidorHttp = createServer((req, res) => {
       'Access-Control-Allow-Headers': 'Content-Type, Authorization'
     });
     return res.end();
+  }
+
+  // Anti fuerza-bruta en autenticación
+  if (url.pathname.startsWith('/api/auth')) {
+    const ip = req.socket.remoteAddress || 'desconocida';
+    const ahora = Date.now();
+    let registro = intentosAuth.get(ip);
+    if (!registro || ahora > registro.reset) {
+      registro = { cuenta: 0, reset: ahora + 15 * 60 * 1000 };
+      intentosAuth.set(ip, registro);
+    }
+    registro.cuenta += 1;
+    if (registro.cuenta > 30) {
+      res.writeHead(429, { 'Content-Type': 'application/json; charset=utf-8' });
+      return res.end(JSON.stringify({ error: 'Demasiados intentos. Espera 15 minutos.' }));
+    }
   }
 
   if (url.pathname.startsWith('/api/')) {
