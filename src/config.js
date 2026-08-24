@@ -53,6 +53,12 @@ export const CONFIG = {
     SMTP_URL: process.env.SMTP_URL || '',
     SIMULADO: bool(process.env.EMAIL_SIMULADO, true)
   },
+  MONEDA: {
+    codigo: process.env.MONEDA_CODIGO || 'USD',
+    simbolo: process.env.MONEDA_SIMBOLO || '$',
+    posicion: process.env.MONEDA_POSICION || 'antes'   // antes | despues
+  },
+  CATALOGO_SIN_VENTA: bool(process.env.CATALOGO_SIN_VENTA, false),
   NEGOCIO: {
     nombre: 'Dulce Encanto',
     eslogan: 'Una explosión de sabor natural en cada cucharada. ¡Hechas con amor y fruta fresca!',

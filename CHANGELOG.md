@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.0] — 2026-08-24
+
+### Added
+- Coupon system: `cupones` table, `POST /api/cupones/validar`, discount applied
+  at checkout and persisted with the order (`descuento`, `cupon` columns).
+  Seeded demo code: **WELCOME10** (-10%)
+- Multi-currency support via env: `MONEDA_CODIGO`, `MONEDA_SIMBOLO`, `MONEDA_POSICION`
+- Catalog mode: `CATALOGO_SIN_VENTA=true` hides cart/checkout and shows "Contáctenos"
+- Docs: REBRAND-GUIDE.md · CUSTOMIZATION.md · DEPLOY-GUIDE.md (Render/Railway/cPanel)
+
 ## [1.0.0] — 2026-08-24
 
 ### Added

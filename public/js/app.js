@@ -11,7 +11,8 @@ const estado = {
   token: localStorage.getItem('dulce-token') || null,
   usuario: JSON.parse(localStorage.getItem('dulce-usuario') || 'null'),
   carrito: JSON.parse(localStorage.getItem('dulce-carrito') || '[]'),
-  sseClientes: new Set()
+  sseClientes: new Set(),
+  config: null
 };
 
 // --- Elementos DOM reutilizados ---
@@ -20,7 +21,23 @@ const $$ = (sel) => document.querySelectorAll(sel);
 const toastContainer = $('#toast-container') || (() => { const d = document.createElement('div'); d.id = 'toast-container'; document.body.appendChild(d); return d })();
 
 // --- Utilidades ---
-const fmtDinero = (n) => `$${Number(n).toFixed(2)}`;
+let productData = [];
+let cuponActivo = null; // {codigo, descuento}
+
+// Decodifica el payload de un token firmado (solo lectura de UI)
+const verificarToken = (token = '') => {
+  try {
+    const b64 = token.split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(b64));
+  } catch { return null; }
+};
+
+const esCatalogo = () => estado.config?.catalogo_sin_venta === true;
+const fmtDinero = (n) => {
+  const m = estado.config?.moneda || { simbolo: '$', posicion: 'antes' };
+  const num = Number(n || 0).toFixed(2);
+  return m.posicion === 'despues' ? `${num} ${m.simbolo}` : `${m.simbolo}${num}`;
+};
 const esc = (t = '') => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const ICONOS_TOAST = { éxito: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
 let toastActivo = null;
@@ -292,7 +309,9 @@ const inicio = () => {
           <div class="nombre">${p.nombre}</div>
           <div class="precio">${fmtDinero(p.precio)} por frasco</div>
           <div class="stock" data-stock="${p.stock}">${p.stock > 0 ? `${p.stock} unidades disponibles` : 'Agotado'}</div>
-          <button class="btn-agregar" data-slug="${p.slug}">Añadir al carrito</button>
+          ${esCatalogo()
+            ? `<a href="#contacto" class="btn-agregar" style="text-decoration:none;text-align:center;">Contáctenos</a>`
+            : `<button class="btn-agregar" data-slug="${p.slug}">Añadir al carrito</button>`}
           ${p.stock <= 5 ? `<span class="stock-alert">¡Últimas unidades!</span>` : ''}
         </div>`;
     });
@@ -338,7 +357,9 @@ const catalogo = () => {
             ${p.stock > 0 ? `${p.stock} disponibles` : 'Agotado'}
             ${bajo ? '<span>¡Últimas!</span>' : ''}
           </div>
-          <button class="btn-agregar" data-slug="${p.slug}">Añadir al carrito</button>
+          ${esCatalogo()
+            ? `<a href="#contacto" class="btn-agregar" style="text-decoration:none;text-align:center;">Contáctenos</a>`
+            : `<button class="btn-agregar" data-slug="${p.slug}">Añadir al carrito</button>`}
         </article>`;
     });
   }
@@ -406,6 +427,10 @@ const carrito = () => {
 };
 
 const checkout = () => {
+  if (esCatalogo()) {
+    showToast('Modo catálogo: compras por teléfono o contacto directo', 'info');
+    return history.back();
+  }
   if (estado.carrito.length === 0) {
     showToast('El carrito está vacío', 'warning');
     return history.back();
@@ -415,14 +440,24 @@ const checkout = () => {
     const p = productData.find(p => p.slug === i.slug);
     return s + p.precio * i.cantidad;
   }, 0);
-  const impuesto = red2(subtotal * 0.15);
-  const envio = subtotal >= 15 ? 0 : 1.5;
-  const total = red2(subtotal + impuesto + envio);
+  const cfg = estado.config || {};
+  const descuento = cuponActivo ? cuponActivo.descuento : 0;
+  const impuesto = red2((subtotal - descuento) * (cfg.iva ?? 0.15));
+  const envio = (subtotal - descuento) >= (cfg.envio_gratis_desde ?? 15) ? 0 : (cfg.costo_envio ?? 1.5);
+  const total = Math.max(0, red2(subtotal - descuento + impuesto + envio));
 
   $('#app').innerHTML = `
     <section class="seccion checkout">
       <h2>Finalizar Compra</h2>
       <form class="checkout-form" id="checkout-form">
+        <div class="form-group">
+          <label>Cupón de descuento</label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="cupon-input" placeholder="Ej. WELCOME10" style="flex:1;text-transform:uppercase;">
+            <button type="button" id="btn-cupon" class="btn btn-outline" style="padding:8px 14px;">Aplicar</button>
+          </div>
+          <small id="cupon-feedback" style="color:#1a9850;"></small>
+        </div>
         <div class="form-group">
           <label>Nombre completo</label>
           <input type="text" required>
@@ -449,7 +484,8 @@ const checkout = () => {
         </div>
         <div style="margin-top:24px;">
           <div class="fila"><span>Subtotal</span>${fmtDinero(subtotal)}</div>
-          <div class="fila"><span>IVA (15%)</span>${fmtDinero(impuesto)}</div>
+          ${descuento > 0 ? `<div class="fila" style="color:#1a9850;"><span>Cupón ${cuponActivo.codigo}</span>−${fmtDinero(descuento)}</div>` : ''}
+          <div class="fila"><span>IVA</span>${fmtDinero(impuesto)}</div>
           <div class="fila"><span>Envío</span>${fmtDinero(envio)}</div>
           <div class="total" style="font-weight:700;font-size:18px;color:var(--morado-profundo);">Total: ${fmtDinero(total)}</div>
         </div>
@@ -460,6 +496,30 @@ const checkout = () => {
       <a href="#/catalogo">← Volver al catálogo</a>
     </nav>
   `;
+
+  const btnCupon = $('#btn-cupon');
+  if (btnCupon) {
+    btnCupon.addEventListener('click', async () => {
+      const codigo = $('#cupon-input').value.trim();
+      const feedback = $('#cupon-feedback');
+      if (!codigo) return;
+      try {
+        const subtotal = estado.carrito.reduce((acc, i) => {
+          const p = productData.find(p => p.slug === i.slug);
+          return acc + (p ? p.precio * i.cantidad : 0);
+        }, 0);
+        const r = await api('/cupones/validar', { method: 'POST', body: { codigo, subtotal } });
+        cuponActivo = { codigo: r.codigo, descuento: r.descuento };
+        feedback.style.color = '#1a9850';
+        feedback.textContent = `✓ Cupón aplicado: −${fmtDinero(r.descuento)}`;
+        checkout(); // re-render con descuento
+      } catch (e) {
+        cuponActivo = null;
+        feedback.style.color = '#e53e3e';
+        feedback.textContent = e.message;
+      }
+    });
+  }
 
   document.getElementById('checkout-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -477,6 +537,7 @@ const checkout = () => {
           cliente_telefono: telefono,
           cliente_direccion: direccion,
           metodo_pago,
+          cupon_codigo: cuponActivo?.codigo || '',
           items: estado.carrito.map(i => ({ producto_id: productData.find(p => p.slug === i.slug).id, cantidad: i.cantidad })),
           notas: $('#checkout-form').querySelector('textarea')?.value || ''
         }
@@ -818,9 +879,16 @@ if ('serviceWorker' in navigator) {
 }
 
 // --- Inicio ---
-const init = () => {
+const init = async () => {
   // Cargar carrito desde localStorage
   cargarCarrito();
+
+  // Config de tienda (moneda, IVA, modo catálogo) y catálogo real del API
+  try {
+    const [cfg, prods] = await Promise.all([api('/config'), api('/productos')]);
+    estado.config = cfg;
+    productData = prods;
+  } catch { /* sin API se muestran los datos por defecto */ }
 
   // Verificar token y usuario
   if (estado.token) {

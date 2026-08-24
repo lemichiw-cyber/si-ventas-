@@ -53,6 +53,8 @@ function iniciarHeartbeat() {
 // 1. Configuración del negocio
 router.get('/config', (ctx) => {
   ctx.json(200, {
+    moneda: CONFIG.MONEDA,
+    catalogo_sin_venta: CONFIG.CATALOGO_SIN_VENTA,
     iva: CONFIG.IVA,
     costo_envio: CONFIG.COSTO_ENVIO,
     envio_gratis_desde: CONFIG.ENVIO_GRATIS_DESDE,
@@ -176,26 +178,29 @@ router.post('/pedidos', async (ctx) => {
     throw new HttpError(409, `Productos con problemas: ${fallidos.map((f) => f.msg).join('; ')}`);
   }
 
-  // Transacción: calcular totales, crear pedido, decrementar stock, movimientos
-  const precios = { precio: 2.50, costo: 1.70 };
-  const subtotal = items.reduce((s, it) => {
-    const v = validados.find((v) => {
-      const p = db.prepare('SELECT id FROM productos WHERE id=? OR slug=?').get(it.producto_id, it.producto_id);
-      return v.ok; // simplified — in real code look up product price from DB
-    });
-    // We'll do simpler: fetch each product's price via inner selects
-    const prod = db.prepare('SELECT precio, costo FROM productos WHERE id=?').get(it.producto_id);
-    return s + (prod ? prod.precio * it.cantidad : 0);
-  }, 0);
-  // Actually simplify: compute using DB prices at time of order
+  // Totales con cupón opcional
   let sub = 0;
   for (const it of items) {
-    const p = db.prepare('SELECT precio, costo, stock, disponible FROM productos WHERE id=?').get(it.producto_id);
+    const p = db.prepare('SELECT precio FROM productos WHERE id=? OR slug=?').get(it.producto_id, it.producto_id);
+    if (!p) throw new HttpError(400, `Producto ${it.producto_id} no existe`);
     sub += p.precio * it.cantidad;
   }
-  const impuesto = red2(sub * CONFIG.IVA);
-  const envio = sub >= CONFIG.ENVIO_GRATIS_DESDE ? 0 : CONFIG.COSTO_ENVIO;
-  const total = red2(sub + impuesto + envio);
+  sub = red2(sub);
+
+  let descuento = 0;
+  let cuponAplicado = '';
+  const codigoCupon = String(body.cupon_codigo || '').trim().toUpperCase();
+  if (codigoCupon) {
+    const c = db.prepare('SELECT * FROM cupones WHERE codigo=? AND activo=1').get(codigoCupon);
+    if (!c) throw new HttpError(400, 'Cupón no válido');
+    descuento = c.tipo === 'porcentaje' ? red2(sub * c.valor / 100) : red2(Math.min(c.valor, sub));
+    cuponAplicado = c.codigo;
+  }
+
+  const impuesto = red2((sub - descuento) * CONFIG.IVA);
+  const envio = (sub - descuento) >= CONFIG.ENVIO_GRATIS_DESDE ? 0 : CONFIG.COSTO_ENVIO;
+  const total = Math.max(0, red2(sub - descuento + impuesto + envio));
+  const subtotal = sub;
   const siguiente = db.prepare('SELECT COUNT(*) AS n FROM pedidos').get().n + 1;
   const numero = `DE-${new Date().getFullYear()}-${String(siguiente).padStart(5, '0')}`;
 
@@ -203,10 +208,10 @@ router.post('/pedidos', async (ctx) => {
   try {
     // Insertar pedido (temporal, numero se llena luego)
     const insPedido = db.prepare(
-      `INSERT INTO pedidos (numero,cliente_nombre,cliente_email,cliente_telefono,cliente_direccion,metodo_pago,subtotal,impuesto,envio,total,estado,creado_en)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO pedidos (numero,cliente_nombre,cliente_email,cliente_telefono,cliente_direccion,metodo_pago,descuento,cupon,subtotal,impuesto,envio,total,estado,creado_en)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     );
-    const pedidoId = insPedido.run(numero, cliente_nombre, cliente_email, cliente_telefono || '', cliente_direccion || '', metodo_pago || 'efectivo', sub, impuesto, envio, total, 'pendiente', fecha()).lastInsertRowid;
+    const pedidoId = insPedido.run(numero, cliente_nombre, cliente_email, cliente_telefono || '', cliente_direccion || '', metodo_pago || 'efectivo', descuento, cuponAplicado, sub, impuesto, envio, total, 'pendiente', fecha()).lastInsertRowid;
 
     // Insertar ítems y decrementar stock
     const insItem = db.prepare(
@@ -245,6 +250,8 @@ router.post('/pedidos', async (ctx) => {
       cliente_direccion,
       metodo_pago,
       subtotal,
+      descuento,
+      cupon: cuponAplicado || null,
       impuesto,
       envio,
       total,
@@ -300,6 +307,19 @@ router.get('/pedidos/:numero', (ctx) => {
   // Eliminar duplicados de estructura
   const uniq = [...new Set(pedido.items.map((it) => it.producto_id))];
   ctx.json(200, pedido);
+});
+
+// --- CUPONES ---
+router.post('/cupones/validar', async (ctx) => {
+  const body = await leerCuerpo(ctx.req);
+  const codigo = String(body.codigo || '').trim().toUpperCase();
+  const subtotal = Number(body.subtotal) || 0;
+  const c = db.prepare('SELECT * FROM cupones WHERE codigo=? AND activo=1').get(codigo);
+  if (!c) throw new HttpError(404, 'Cupón no válido');
+  const descuento = c.tipo === 'porcentaje'
+    ? red2(sub * c.valor / 100)
+    : red2(Math.min(c.valor, subtotal));
+  ctx.json(200, { codigo: c.codigo, tipo: c.tipo, valor: c.valor, descuento });
 });
 
 // --- RUTAS DE ADMINISTRADOR (requiere JWT + rol admin) ---

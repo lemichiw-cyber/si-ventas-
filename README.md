@@ -22,6 +22,9 @@ admin dashboard with live charts and stock alerts.
 - 🍓 **Product catalog** with search, featured products and detail pages
 - 🛒 **Shopping cart** — add/remove, quantities, fly-to-cart animation, live badge
 - 💳 **Checkout** — subtotal + configurable tax & shipping (free shipping threshold)
+- 🎟️ **Coupon system** — percentage/fixed codes validated server-side, stored per order
+- 💱 **Multi-currency ready** — symbol/code/position via env vars
+- 🛍️ **Catalog mode** — `CATALOGO_SIN_VENTA=true` turns the store into a showcase ("Contact us")
 - 📦 **Order tracking** for customers by order number + email
 - ⚡ **Real-time stock updates** via Server-Sent Events — no page refresh
 

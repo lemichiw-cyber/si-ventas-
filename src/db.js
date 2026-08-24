@@ -127,4 +127,29 @@ const insPro = db.prepare(
   console.log('✨ Datos base sembrados: ' + prods.length + ' productos, 2 usuarios.');
 }
 
+// ── Cupones ──
+db.exec(`
+  CREATE TABLE IF NOT EXISTS cupones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    codigo TEXT UNIQUE NOT NULL,
+    tipo TEXT NOT NULL DEFAULT 'porcentaje' CHECK (tipo IN ('porcentaje','fijo')),
+    valor REAL NOT NULL,
+    activo INTEGER NOT NULL DEFAULT 1,
+    creado_en TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+`);
+
+// Migraciones ligeras para instalaciones previas
+try { db.prepare("SELECT descuento FROM pedidos LIMIT 1").get(); }
+catch { db.exec("ALTER TABLE pedidos ADD COLUMN descuento REAL NOT NULL DEFAULT 0;"); }
+try { db.prepare("SELECT cupon FROM pedidos LIMIT 1").get(); }
+catch { db.exec("ALTER TABLE pedidos ADD COLUMN cupon TEXT NOT NULL DEFAULT '';"); }
+
+// Cupón de bienvenida
+const hayCupones = db.prepare('SELECT COUNT(*) AS n FROM cupones').get().n;
+if (!hayCupones) {
+  db.prepare("INSERT INTO cupones (codigo,tipo,valor) VALUES ('WELCOME10','porcentaje',10)").run();
+  console.log('🎟️  Cupón de bienvenida creado: WELCOME10 (-10%)');
+}
+
 sembrar();
