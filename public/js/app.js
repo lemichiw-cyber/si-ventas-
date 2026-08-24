@@ -111,8 +111,9 @@ const logout = () => {
   localStorage.removeItem('dulce-carrito');
   estado.carrito = [];
   updateUI();
-  SSE_CLIENTES.forEach(c => c.res.close());
-  SSE_CLIENTES.clear();
+  if (estado.sseSource) { estado.sseSource.close(); estado.sseSource = null; }
+  showToast('Sesión cerrada', 'info');
+  window.location.hash = '#/';
 };
 
 // --- Carrito ---
@@ -123,11 +124,104 @@ const cargarCarrito = () => {
 };
 
 const actualizarCarritoDOM = () => {
-  const carrito = $('.carrito-con-items') || document.createElement('div');
-  const itemsDiv = $('#carrito-items') || document.createElement('div');
-  if (!$('#carrito-items')) {
-    document.querySelector('#carrito-contenido')?.appendChild(itemsDiv);
+  const carrito = () => {
+  const itemsConProducto = estado.carrito.map((i) => ({
+    ...i,
+    prod: productData.find((p) => p.slug === i.slug)
+  })).filter((i) => i.prod);
+
+  if (itemsConProducto.length === 0) {
+    $('#app').innerHTML = `
+      <section class="seccion carrito-vacio">
+        <div style="font-size:3.4rem;">🛒</div>
+        <h2 style="color:var(--plum);margin-top:10px;">Tu carrito está vacío</h2>
+        <p>Explora nuestros sabores y añade tus favoritas.</p>
+        <a href="#/catalogo" class="btn cta-btn" style="text-decoration:none;margin-top:14px;">Ir al catálogo</a>
+      </section>`;
+    return;
   }
+
+  const cfg = estado.config || {};
+  const subtotal = itemsConProducto.reduce((acc, i) => acc + i.prod.precio * i.cantidad, 0);
+  const costoEnvio = cfg.costo_envio ?? 1.5;
+  const gratisDesde = cfg.envio_gratis_desde ?? 15;
+  const envio = subtotal >= gratisDesde ? 0 : costoEnvio;
+  const total = red2(subtotal + envio);
+  const faltaGratis = envio > 0 ? fmtDinero(gratisDesde - subtotal) : null;
+
+  $('#app').innerHTML = `
+    <section class="seccion" style="max-width:760px;">
+      <div class="section-head" style="margin-bottom:24px;text-align:left;">
+        <h2 class="section-title">Tu carrito</h2>
+      </div>
+      <div id="carrito-lista">
+        ${itemsConProducto.map(({ slug, cantidad, prod }) => {
+          const idxReal = estado.carrito.indexOf(estado.carrito.find((i2) => i2.slug === slug));
+          return `
+          <div class="carrito-item">
+            <div class="card-media" style="width:64px;height:64px;border-radius:12px;flex-shrink:0;">
+              ${frascoSvg(getSvgKey(prod.imagen), 40)}
+            </div>
+            <div style="flex:1;min-width:0;">
+              <a href="#/producto/${slug}" style="text-decoration:none;font-weight:800;color:var(--plum);">${esc(prod.nombre)}</a>
+              <div style="font-size:.82rem;color:var(--tinta-suave);">${fmtDinero(prod.precio)} c/u</div>
+              <div class="cantidad-selector" style="margin:6px 0 0;transform:scale(.85);transform-origin:left;">
+                <button type="button" data-accion="menos" data-slug="${slug}">−</button>
+                <span class="cantidad-input" style="min-width:44px;text-align:center;">${cantidad}</span>
+                <button type="button" data-accion="mas" data-slug="${slug}">+</button>
+              </div>
+            </div>
+            <strong style="color:var(--primary-dark);white-space:nowrap;">${fmtDinero(prod.precio * cantidad)}</strong>
+            <button class="quitar-item" data-index="${idxReal}" aria-label="Quitar">×</button>
+          </div>`;
+        }).join('')}
+      </div>
+
+      ${faltaGratis ? `<p style="text-align:center;color:#8a6410;font-weight:700;font-size:.9rem;background:var(--accent-soft);padding:10px;border-radius:12px;margin-top:14px;">
+        🚚 Te faltan ${faltaGratis} para el envío GRATIS</p>` : ''}
+
+      <div class="checkout-resumen">
+        <div class="fila"><span>Subtotal</span><span>${fmtDinero(subtotal)}</span></div>
+        <div class="fila"><span>Envío</span><span>${envio === 0 ? 'GRATIS 🎉' : fmtDinero(envio)}</span></div>
+        <div class="fila total"><span>Total (sin IVA)</span><span>${fmtDinero(total)}</span></div>
+        <button id="btn-finalizar" class="btn btn-primary btn-finalizar" style="margin-top:16px;width:100%;">
+          Finalizar compra →
+        </button>
+        <button id="btn-vaciar" class="btn btn-outline dark" style="margin-top:10px;width:100%;padding:10px;">Vaciar carrito</button>
+      </div>
+    </section>`;
+
+  document.querySelectorAll('[data-accion]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const item = estado.carrito.find((i) => i.slug === b.dataset.slug);
+      if (!item) return;
+      const prod = productData.find((p) => p.slug === b.dataset.slug);
+      if (b.dataset.accion === 'mas') item.cantidad = Math.min(item.cantidad + 1, prod?.stock || 99);
+      else item.cantidad = Math.max(1, item.cantidad - 1);
+      localStorage.setItem('dulce-carrito', JSON.stringify(estado.carrito));
+      actualizarCarritoDOM();
+      carrito();
+    });
+  });
+
+  document.querySelectorAll('.quitar-item').forEach((b) => {
+    b.addEventListener('click', () => {
+      quitarDelCarrito(Number(b.dataset.index));
+      carrito();
+    });
+  });
+
+  $('#btn-vaciar')?.addEventListener('click', () => {
+    estado.carrito = [];
+    localStorage.removeItem('dulce-carrito');
+    actualizarCarritoDOM();
+    carrito();
+  });
+
+  $('#btn-finalizar')?.addEventListener('click', () => {
+    window.location.hash = '#/checkout';
+  });
+};
   if (estado.carrito.length === 0) {
     itemsDiv.innerHTML = '<p class="carrito-vacio">Tu carrito está vacío</p>';
     $('#carrito-total')?.remove();
@@ -210,24 +304,23 @@ const connectSSE = () => {
   const source = new EventSource('/api/eventos');
   estado.sseClientes.add({ res: source });
 
-  source.onmessage = (e) => {
-    const data = JSON.parse(e.data);
-    if (data.tipo === 'stock') {
-      // Actualizar badge de stock en el catálogo
-      const badge = document.querySelector(`[data-producto="${data.producto_id}"] .badge`);
-      if (badge) {
-        badge.textContent = data.bajoStock ? '¡Últimas!' : '';
-        badge.className = data.bajoStock ? 'bajo' : '';
-      }
-      // Si está en bajo stock crítico, mostrar toast
-      if (data.bajoStock && data.stock <= 2) {
-        showToast(`Queda poco stock de ${data.producto_nombre}`, 'warning');
-      }
-    }
-    if (data.tipo === 'pedido') {
-      showToast(`Nuevo pedido ${data.numero}`, 'éxito');
-    }
-  };
+  function actualizarStockEnDOM(productoId, nuevoStock) {
+    const prod = productData.find((p) => p.id === productoId);
+    if (prod) prod.stock = nuevoStock;
+    document.querySelectorAll(`[data-pid="${productoId}"]`).forEach((el) => {
+      const agotado = nuevoStock === 0;
+      const bajo = !agotado && nuevoStock < (prod?.stock_minimo || 5);
+      el.className = `badge-estado ${agotado ? 'badge-agotado' : bajo ? 'stock-alert' : 'badge-disponible'}`;
+      el.textContent = agotado ? 'Agotado' : bajo ? `¡Últimas ${nuevoStock}!` : `${nuevoStock} disponibles`;
+    });
+  }
+
+  source.addEventListener('stock', (e) => {
+    const d = JSON.parse(e.data);
+    actualizarStockEnDOM(d.producto_id, d.stock);
+    if (d.bajoStock && d.stock <= 2) showToast(`Queda poco stock de ${d.producto_nombre}`, 'warning');
+  });
+  source.addEventListener('connected', () => {});
 
   source.onerror = () => {
     source.close();
@@ -278,6 +371,30 @@ const router = () => {
 
 // --- Inicialización de vistas ---
 
+// Tarjeta de producto reutilizable
+const tarjetaProducto = (p) => {
+  const bajo = p.stock < p.stock_minimo;
+  const agotado = p.stock === 0;
+  return `
+    <article class="card-producto reveal">
+      ${p.destacado ? '<span class="destacado-star">★ Destacado</span>' : ''}
+      <div class="card-media">${frascoSvg(getSvgKey(p.imagen), 60)}</div>
+      <div class="card-body">
+        <h3 class="nombre">${esc(p.nombre)}</h3>
+        <p class="tagline">${esc(p.tagline || '')}</p>
+        <div class="precio">${fmtDinero(p.precio)} <small>/ frasco</small></div>
+        <span class="badge-estado ${agotado ? 'badge-agotado' : bajo ? 'stock-alert' : 'badge-disponible'}" data-pid="${p.id}">
+          ${agotado ? 'Agotado' : bajo ? `¡Últimas ${p.stock}!` : `${p.stock} disponibles`}
+        </span>
+        ${esCatalogo()
+          ? `<a href="#/contacto" class="btn-agregar" style="text-decoration:none;">Contáctenos</a>`
+          : agotado
+            ? `<button class="btn-agregar" disabled>Agotado</button>`
+            : `<button class="btn-agregar" data-slug="${p.slug}">Añadir al carrito</button>`}
+      </div>
+    </article>`;
+};
+
 const inicio = () => {
   $('#app').innerHTML = `
     <section class="hero">
@@ -288,7 +405,7 @@ const inicio = () => {
         Mermeladas artesanales hechas con fruta fresca de temporada.</p>
         <div class="hero-actions">
           <a href="#/catalogo" class="cta-btn">Explorar sabores</a>
-          <a href="#/nosotros" class="btn-outline">Nuestra historia</a>
+          <a href="#/nosotros" class="btn-outline dark">Nuestra historia</a>
         </div>
       </div>
     </section>
@@ -325,8 +442,7 @@ const inicio = () => {
   if (grid) {
     grid.innerHTML = productData.slice(0, 3).map((p) => tarjetaProducto(p)).join('');
     grid.querySelectorAll('.btn-agregar[data-slug]').forEach(btn =>
-      btn.addEventListener('click', () => agregarAlCarrito(btn.getAttribute('data-slug')))
-    );
+      btn.addEventListener('click', () => agregarAlCarrito(btn.getAttribute('data-slug'))));
   }
 };;
 
@@ -345,8 +461,7 @@ const catalogo = () => {
   if (grid) {
     grid.innerHTML = productData.map((p) => tarjetaProducto(p)).join('');
     grid.querySelectorAll('.btn-agregar[data-slug]').forEach(btn =>
-      btn.addEventListener('click', () => agregarAlCarrito(btn.getAttribute('data-slug')))
-    );
+      btn.addEventListener('click', () => agregarAlCarrito(btn.getAttribute('data-slug'))));
   }
 };;
 
@@ -369,7 +484,8 @@ const productoFicha = (param) => {
           <div class="precio" style="font-size:1.7rem;">${fmtDinero(producto.precio)} <small>por frasco</small></div>
 
           <div class="${agotado ? 'badge-agotado' : bajo ? 'stock-alert' : 'badge-disponible'}"
-               style="display:inline-flex;padding:5px 14px;border-radius:9999px;margin:12px 0;font-weight:700;">
+               style="display:inline-flex;padding:5px 14px;border-radius:9999px;margin:12px 0;font-weight:700;"
+               data-pid="${producto.id}">
             ${agotado ? 'Agotado temporalmente' : `Stock: ${producto.stock} unidades`}
           </div>
 
@@ -550,9 +666,10 @@ const checkout = () => {
 
       // Guardar número de pedido
       localStorage.setItem('ultimo-pedido', res.numero);
+      localStorage.setItem('dulce-ultimo-email', res.cliente_email || '');
 
-      // Limpiar carrito
       estado.carrito = [];
+      cuponActivo = null;
       localStorage.removeItem('dulce-carrito');
       actualizarCarritoDOM();
 
@@ -658,11 +775,17 @@ const loginView = () => {
     </section>
   `;
 
-  document.getElementById('login-form').addEventListener('submit', (e) => {
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = $('#login-form').querySelector('input[type="email"]').value;
     const password = $('#login-form').querySelector('input[type="password"]').value;
-    login(email, password);
+    try {
+      await login(email, password);
+      showToast('¡Bienvenido de nuevo!', 'success');
+      window.location.hash = '#/';
+    } catch (err) {
+      showToast(err.message || 'No se pudo iniciar sesión', 'error');
+    }
   });
 };
 
@@ -691,18 +814,23 @@ const registroView = () => {
     </section>
   `;
 
-  document.getElementById('registro-form').addEventListener('submit', (e) => {
+  document.getElementById('registro-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const nombre = $('#registro-form').querySelector('input[type="text"]').value;
     const email = $('#registro-form').querySelector('input[type="email"]').value;
     const password = $('#registro-form').querySelector('input[type="password"]').value;
-    register(nombre, email, password);
+    try {
+      await register(nombre, email, password);
+      showToast('Cuenta creada ✅ Ya puedes iniciar sesión', 'success');
+      window.location.hash = '#/login';
+    } catch (err) {
+      showToast(err.message || 'No se pudo crear la cuenta', 'error');
+    }
   });
 };
 
 // --- Dashboard Admin ---
 const adminView = async () => {
-  // Doble capa frontend: sin rol admin no se carga la vista
   if (!estado.usuario || estado.usuario.rol !== 'admin') {
     showToast('Acceso denegado - se requiere rol de administrador', 'error');
     window.location.hash = '#/';
@@ -735,13 +863,12 @@ const adminView = async () => {
   try {
     const r = await api('/admin/resumen');
     const { kpis, ventas_por_dia, top_sabores, bajo_stock, ultimos_pedidos } = r;
-    const fmt = (n) => fmtDinero(n);
 
     $('#admin-kpis').innerHTML = [
-      [fmt(kpis.ganancia_total), 'Ganancia total', `${kpis.unidades_vendidas} frascos vendidos`],
+      [fmtDinero(kpis.ganancia_total), 'Ganancia total', `${kpis.unidades_vendidas} frascos vendidos`],
       [kpis.pedidos_totales, 'Pedidos totales', 'Histórico de ventas'],
       [kpis.unidades_vendidas, 'Frascos vendidos', 'Unidades totales'],
-      [fmt(kpis.ventas_totales), 'Facturación', 'Sin pedidos cancelados']
+      [fmtDinero(kpis.ventas_totales), 'Facturación', 'Sin pedidos cancelados']
     ].map(([v, t2, sub]) => `
       <div class="kpi-card">
         <div class="kpi-valor">${v}</div>
@@ -797,7 +924,9 @@ async function cargarTablaPedidos() {
         } catch (e) { showToast(e.message, 'error'); }
       });
     });
-  } catch (e) { cont.innerHTML = `<p style="padding:16px;color:var(--error);">${esc(e.message)}</p>`; }
+  } catch (e) {
+    cont.innerHTML = `<p style="padding:16px;color:var(--error);">${esc(e.message)}</p>`;
+  }
 }
 
 async function cargarTablaProductos() {
@@ -829,7 +958,9 @@ async function cargarTablaProductos() {
         } catch (e) { showToast(e.message, 'error'); }
       });
     });
-  } catch (e) { cont.innerHTML = `<p style="padding:16px;color:var(--error);">${esc(e.message)}</p>`; }
+  } catch (e) {
+    cont.innerHTML = `<p style="padding:16px;color:var(--error);">${esc(e.message)}</p>`;
+  }
 };
 
 
@@ -872,7 +1003,7 @@ const init = async () => {
   updateUI();
 
   // Conectar SSE si hay usuario logueado
-  if (estado.usuario) connectSSE();
+  connectSSE();
 
   // Router inicial
   router();
@@ -880,16 +1011,35 @@ const init = async () => {
 };
 
 const updateUI = () => {
-  const userBtn = $('.user-chip') || (() => { const d = document.createElement('div'); d.className = 'user-chip'; document.querySelector('nav')?.prepend(d); return d })();
-  const cartBadge = $('#cart-badge') || (() => { const d = document.createElement('span'); d.className = 'cart-badge'; document.querySelector('.nav-links')?.prepend(d); return d })();
+  // Badge del carrito
+  const badge = $('#cart-badge');
+  if (badge) badge.textContent = estado.carrito.reduce((a, i) => a + i.cantidad, 0);
 
-  if (estado.usuario) {
-    userBtn.innerHTML = `${estado.usuario.nombre} 👤`;
-    userBtn.classList.remove('oculto');
-    cartBadge.textContent = estado.carrito.length;
+  // Menú de usuario
+  const slot = $('#user-slot');
+  if (!slot) return;
+  slot.innerHTML = '';
+
+  if (estado.usuario && estado.usuario.rol !== 'admin') {
+    slot.innerHTML = `
+      <div class="menu-usuario">
+        <span class="user-chip">${esc(estado.usuario.nombre.split(' ')[0])} 👤</span>
+        <button class="btn-logout" id="btn-logout" title="Cerrar sesión">Salir</button>
+      </div>`;
+    $('#btn-logout')?.addEventListener('click', () => logout());
+  } else if (estado.usuario && estado.usuario.rol === 'admin') {
+    slot.innerHTML = `
+      <div class="menu-usuario">
+        <span class="user-chip">🛡️ Admin</span>
+        <button class="btn-logout" id="btn-logout" title="Cerrar sesión">Salir</button>
+      </div>`;
+    $('#btn-logout')?.addEventListener('click', () => logout());
   } else {
-    userBtn.classList.add('oculto');
-    cartBadge.textContent = '0';
+    const a = document.createElement('a');
+    a.href = '#/login';
+    a.className = 'nav-login';
+    a.textContent = 'Iniciar sesión';
+    slot.appendChild(a);
   }
 };
 

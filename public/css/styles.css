@@ -486,3 +486,18 @@ footer {
   .tabla-admin { font-size:.82rem; }
   .checkout { padding:0 14px; }
 }
+
+/* ═══ Menú de usuario (header) ═══ */
+.menu-usuario { display:inline-flex; align-items:center; gap:8px; }
+.btn-logout {
+  border:none; background:transparent; color:var(--tinta-suave);
+  font-family:inherit; font-weight:700; font-size:.8rem; cursor:pointer;
+  padding:6px 10px; border-radius:var(--r-pill); transition:.2s;
+}
+.btn-logout:hover { background:#FBE4E6; color:var(--error); }
+.nav-login {
+  text-decoration:none; font-weight:700; font-size:.85rem;
+  color:var(--primary-dark); background:var(--primary-soft);
+  padding:8px 16px; border-radius:var(--r-pill); transition:.2s;
+}
+.nav-login:hover { background:var(--primary); color:#fff; }
