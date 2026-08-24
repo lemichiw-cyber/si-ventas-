@@ -193,7 +193,7 @@ router.post('/pedidos', async (ctx) => {
   if (codigoCupon) {
     const c = db.prepare('SELECT * FROM cupones WHERE codigo=? AND activo=1').get(codigoCupon);
     if (!c) throw new HttpError(400, 'Cupón no válido');
-    descuento = c.tipo === 'porcentaje' ? red2(sub * c.valor / 100) : red2(Math.min(c.valor, sub));
+    descuento = c.tipo === 'porcentaje' ? red2(subtotal * c.valor / 100) : red2(Math.min(c.valor, sub));
     cuponAplicado = c.codigo;
   }
 
@@ -317,7 +317,7 @@ router.post('/cupones/validar', async (ctx) => {
   const c = db.prepare('SELECT * FROM cupones WHERE codigo=? AND activo=1').get(codigo);
   if (!c) throw new HttpError(404, 'Cupón no válido');
   const descuento = c.tipo === 'porcentaje'
-    ? red2(sub * c.valor / 100)
+    ? red2(subtotal * c.valor / 100)
     : red2(Math.min(c.valor, subtotal));
   ctx.json(200, { codigo: c.codigo, tipo: c.tipo, valor: c.valor, descuento });
 });
