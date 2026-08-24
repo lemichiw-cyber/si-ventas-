@@ -24,7 +24,16 @@ const bool = (v, def) => (v === undefined || v === '' ? def : String(v).toLowerC
 export const CONFIG = {
   PUERTO: num(process.env.PUERTO ?? process.env.PORT, 3000),
   DB_ARCHIVO: process.env.DB_ARCHIVO || path.join(RAIZ, 'data', 'dulce-encanto.db'),
-  JWT_SECRETO: process.env.JWT_SECRETO || 'dulce-encanto-secreto-local-cambiar-en-produccion',
+  // En producción el secreto es obligatorio: si falta, la app debe fallar al arrancar.
+  JWT_SECRETO: (() => {
+    const secreto = process.env.JWT_SECRETO;
+    if (secreto) return secreto;
+    if ((process.env.NODE_ENV || '').toLowerCase() === 'production') {
+      console.error('FATAL: define JWT_SECRETO antes de ejecutar en producción.');
+      process.exit(1);
+    }
+    return 'dulce-encanto-secreto-solo-desarrollo';
+  })(),
   TOKEN_HORAS: num(process.env.TOKEN_HORAS, 168),
   IVA: num(process.env.IVA, 0.15),
   COSTO_ENVIO: num(process.env.COSTO_ENVIO, 1.5),

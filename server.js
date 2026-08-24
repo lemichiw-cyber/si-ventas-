@@ -79,6 +79,9 @@ function servirStaticos(req, res, url) {
 }
 
 const servidorHttp = createServer((req, res) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   const url = new URL(req.url || '/', `http://${req.headers.host}`);
 
   if (req.method === 'OPTIONS') {
