@@ -34,7 +34,8 @@ function servirArchivo(res, filepath, tipo) {
 
 async function manejarApi(req, res, url) {
   const ruta = url.pathname.replace(/^\/api/, '') || '/';
-  const match = router.resolver(req.method, ruta);
+  const metodo = req.method === 'HEAD' ? 'GET' : req.method;
+  const match = router.resolver(metodo, ruta);
 
   if (!match) {
     res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
