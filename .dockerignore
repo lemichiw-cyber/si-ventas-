@@ -7,3 +7,5 @@ data
 .env
 Dockerfile
 docker-compose.yml
+render.yaml
+.node-version
