@@ -281,130 +281,135 @@ const router = () => {
 const inicio = () => {
   $('#app').innerHTML = `
     <section class="hero">
-      <h1>Dulce Encanto</h1>
-      <p class="eslogan">"Una explosión de sabor natural en cada cucharada. ¡Hechas con amor y fruta fresca!"</p>
-      <a href="#/catalogo" class="cta-btn">Explorar sabores</a>
+      <div class="hero-content">
+        <span class="hero-badge">🍓 Hecho a mano · Lotes pequeños</span>
+        <h1>Dulce Encanto</h1>
+        <p class="hero-sub">Una explosión de sabor natural en cada cucharada.
+        Mermeladas artesanales hechas con fruta fresca de temporada.</p>
+        <div class="hero-actions">
+          <a href="#/catalogo" class="cta-btn">Explorar sabores</a>
+          <a href="#/nosotros" class="btn-outline">Nuestra historia</a>
+        </div>
+      </div>
     </section>
 
-    <div class="seccion" id="destacados">
-      <h2>Mermeladas Destacadas</h2>
-      <div class="contenido" id="destacados-grid"></div>
-    </div>
+    <section class="seccion" id="destacados">
+      <div class="section-head reveal">
+        <span class="section-kicker">Los favoritos</span>
+        <h2 class="section-title">Mermeladas Destacadas</h2>
+        <p class="section-sub">Las que nuestros clientes vuelven a comprar una y otra vez.</p>
+      </div>
+      <div id="destacados-grid" style="display:grid;gap:26px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));"></div>
+    </section>
 
-    <div class="seccion" style="background:var(--crema);padding:60px 24px;">
-      <h2>Nuestro Compromiso</h2>
-      <p>Ofrecer mermeladas de calidad, naturales y deliciosas, elaboradas con el mejor cuidado.</p>
-      <p>Usamos solo frutas frescas de temporada, azúcar de caña y jugo natural de limón. Sin conservantes artificiales. Hechas a mano en pequeños lotes.</p>
-    </div>
+    <section class="seccion alt-bg">
+      <div class="section-head reveal">
+        <span class="section-kicker">Nuestro compromiso</span>
+        <h2 class="section-title">Natural, artesanal, real</h2>
+      </div>
+      <div class="valores reveal">
+        <div class="valor-card"><div class="valor-emoji">🍓</div><div class="valor-titulo">Fruta fresca</div>De temporada y en su punto exacto.</div>
+        <div class="valor-card"><div class="valor-emoji">🔥</div><div class="valor-titulo">Cocción lenta</div>Pequeños lotes artesanales.</div>
+        <div class="valor-card"><div class="valor-emoji">🌿</div><div class="valor-titulo">Sin conservantes</div>Solo azúcar de caña y limón.</div>
+        <div class="valor-card"><div class="valor-emoji">🎀</div><div class="valor-titulo">Hecho a mano</div>Etiquetado y decorado uno a uno.</div>
+      </div>
+    </section>
   `;
 
-  // Renderizar tarjetas destacadas
+  const obs = new IntersectionObserver((ents) => ents.forEach(en => {
+    if (en.isIntersecting) { en.target.classList.add('reveal-visible'); obs.unobserve(en.target); }
+  }), { threshold:.12 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
   const grid = $('#destacados-grid');
   if (grid) {
-    productData.slice(0, 3).forEach((p, i) => {
-      const imgSvg = frascoSvg(getSvgKey(p.imagen), 60);
-      grid.innerHTML += `
-        <div class="card-producto destacado" data-slug="${p.slug}">
-          ${imgSvg}
-          <div class="nombre">${p.nombre}</div>
-          <div class="precio">${fmtDinero(p.precio)} por frasco</div>
-          <div class="stock" data-stock="${p.stock}">${p.stock > 0 ? `${p.stock} unidades disponibles` : 'Agotado'}</div>
-          ${esCatalogo()
-            ? `<a href="#contacto" class="btn-agregar" style="text-decoration:none;text-align:center;">Contáctenos</a>`
-            : `<button class="btn-agregar" data-slug="${p.slug}">Añadir al carrito</button>`}
-          ${p.stock <= 5 ? `<span class="stock-alert">¡Últimas unidades!</span>` : ''}
-        </div>`;
-    });
+    grid.innerHTML = productData.slice(0, 3).map((p) => tarjetaProducto(p)).join('');
+    grid.querySelectorAll('.btn-agregar[data-slug]').forEach(btn =>
+      btn.addEventListener('click', () => agregarAlCarrito(btn.getAttribute('data-slug')))
+    );
   }
-  // Event listeners para "Añadir al carrito"
-  document.querySelectorAll('#destacados-grid .btn-agregar').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const slug = btn.getAttribute('data-slug');
-      agregarAlCarrito(slug);
-    });
-  });
-};
+};;
 
 const catalogo = () => {
   $('#app').innerHTML = `
-    <section class="seccion" id="catalogo">
-      <h2>Nuestros Sabores</h2>
-      <p>Mermeladas artesanales de frutas frescas</p>
-      <div class="contenido" id="catalogo-grid"></div>
+    <section class="seccion alt-bg" style="min-height:70vh;">
+      <div class="section-head">
+        <span class="section-kicker">Catálogo completo</span>
+        <h2 class="section-title">Nuestros Sabores</h2>
+        <p class="section-sub">${productData.length} mermeladas artesanales disponibles</p>
+      </div>
+      <div id="catalogo-grid" style="display:grid;gap:26px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));"></div>
     </section>
-    <nav class="nav-links" style="margin-top:20px;justify-content:center;">
-      <a href="#/">Inicio</a>
-      <a href="#/catalogo" class="activo">Catálogo</a>
-      <a href="#/nosotros">Nosotros</a>
-      <a href="#/contacto">Contacto</a>
-      ${estado.usuario && estado.usuario.rol !== 'admin'
-        ? `<a href="#/carrito">Carrito <span class="cart-badge" id="cart-badge">0</span></a>`
-        : `<a href="#/login">Login</a>`}
-    </nav>
   `;
-
   const grid = $('#catalogo-grid');
   if (grid) {
-    productData.forEach((p) => {
-      const bajo = p.stock < p.stock_minimo;
-      const imgSvg = frutaSvg(getSvgKey(p.imagen), 50);
-      grid.innerHTML += `
-        <article class="card-producto ${p.destacado ? 'destacado' : ''}" data-slug="${p.slug}">
-          ${imgSvg}
-          <div class="nombre">${p.nombre}</div>
-          <div class="precio">${fmtDinero(p.precio)} por frasco</div>
-          <div class="stock ${bajo ? 'bajo' : ''}" data-stock="${p.stock}">
-            ${p.stock > 0 ? `${p.stock} disponibles` : 'Agotado'}
-            ${bajo ? '<span>¡Últimas!</span>' : ''}
-          </div>
-          ${esCatalogo()
-            ? `<a href="#contacto" class="btn-agregar" style="text-decoration:none;text-align:center;">Contáctenos</a>`
-            : `<button class="btn-agregar" data-slug="${p.slug}">Añadir al carrito</button>`}
-        </article>`;
-    });
+    grid.innerHTML = productData.map((p) => tarjetaProducto(p)).join('');
+    grid.querySelectorAll('.btn-agregar[data-slug]').forEach(btn =>
+      btn.addEventListener('click', () => agregarAlCarrito(btn.getAttribute('data-slug')))
+    );
   }
-
-  document.querySelectorAll('#catalogo-grid .btn-agregar').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const slug = btn.getAttribute('data-slug');
-      agregarAlCarrito(slug);
-    });
-  });
-};
+};;
 
 const productoFicha = (param) => {
   const producto = productData.find(p => p.slug === param);
   if (!producto) return showToast('Producto no encontrado', 'error');
 
+  const agotado = producto.stock === 0;
+  const bajo = !agotado && producto.stock < producto.stock_minimo;
+
   $('#app').innerHTML = `
-    <section class="producto-ficha">
-      <img class="imagen-principal" src="${frascoSvg(getSvgKey(producto.imagen), 80)}" alt="${producto.nombre}">
-      <h1>${producto.nombre}</h1>
-      <p class="tagline">${producto.tagline}</p>
-      <div class="precio">${fmtDinero(producto.precio)} por frasco</div>
-      <div class="ingredientes">
-        <strong>Ingredientes:</strong> ${producto.ingredientes}
+    <section class="seccion">
+      <a href="#/catalogo" class="volver">← Volver al catálogo</a>
+      <div class="producto-ficha">
+        <div class="imagen-principal">${frascoSvg(getSvgKey(producto.imagen), 80)}</div>
+        <div>
+          ${producto.destacado ? '<span class="destacado-star">★ Destacado</span>' : ''}
+          <h1 style="font-size:2rem;color:var(--plum);margin:10px 0 6px;">${esc(producto.nombre)}</h1>
+          <p class="tagline" style="font-size:1.02rem;">${esc(producto.tagline || '')}</p>
+          <div class="precio" style="font-size:1.7rem;">${fmtDinero(producto.precio)} <small>por frasco</small></div>
+
+          <div class="${agotado ? 'badge-agotado' : bajo ? 'stock-alert' : 'badge-disponible'}"
+               style="display:inline-flex;padding:5px 14px;border-radius:9999px;margin:12px 0;font-weight:700;">
+            ${agotado ? 'Agotado temporalmente' : `Stock: ${producto.stock} unidades`}
+          </div>
+
+          <p style="color:var(--tinta-suave);">${esc(producto.descripcion || producto.tagline || '')}</p>
+          <strong style="font-size:.85rem;color:var(--plum);">Ingredientes</strong>
+          <ul class="ingredientes" style="margin:8px 0 4px;">
+            ${(producto.ingredientes || 'Fruta, azúcar de caña, limón').split(',').map(i => `<li>${esc(i.trim())}</li>`).join('')}
+          </ul>
+
+          ${esCatalogo() ? '' : `
+          <div class="cantidad-selector">
+            <button type="button" id="restar">−</button>
+            <input type="number" id="cantidad-input" min="1" max="${producto.stock || 1}" value="1" class="cantidad-input">
+            <button type="button" id="sumar">+</button>
+          </div>`}
+
+          ${esCatalogo()
+            ? '<a href="#/contacto" class="btn cta-btn" style="text-decoration:none;">Solicitar por contacto</a>'
+            : `<button class="btn btn-primary btn-agregar-carrito" data-slug="${producto.slug}" style="width:100%;padding:15px;" ${agotado ? 'disabled' : ''}>
+                 ${agotado ? 'Agotado' : 'Añadir al carrito'}
+               </button>`}
+        </div>
       </div>
-      <div class="stock-info ${producto.stock === 0 ? 'agotado' : producto.stock < producto.stock_minimo ? 'low' : 'disponible'}">
-        <span class="cantidad">${producto.stock > 0 ? `Stock: ${producto.stock} unidades` : 'Agotado'}</span>
-      </div>
-      <div class="cantidad-selector">
-        <label>Cantidad:</label>
-        <input type="number" id="cantidad-input" min="1" max="${producto.stock > 0 ? producto.stock : 1}" value="1" class="cantidad-input">
-      </div>
-      <button class="btn-agregar-carrito" data-slug="${producto.slug}">
-        Añadir al carrito
-      </button>
     </section>
-    <nav class="nav-links" style="margin-top:20px;justify-content:center;">
-      <a href="#/catalogo">← Volver al catálogo</a>
+    <nav style="text-align:center;padding-bottom:40px;">
+      <a href="#/catalogo" class="volver">← Seguir explorando sabores</a>
     </nav>
   `;
 
   const inputCantidad = $('#cantidad-input');
-  const btnAgregar = $(`.btn-agregar-carrito[data-slug="${producto.slug}"]`);
+  const restar = $('#restar'), sumar = $('#sumar');
+  if (restar && inputCantidad) restar.addEventListener('click', () => {
+    inputCantidad.value = Math.max(1, (parseInt(inputCantidad.value) || 1) - 1);
+  });
+  if (sumar && inputCantidad) sumar.addEventListener('click', () => {
+    inputCantidad.value = Math.min(producto.stock || 99, (parseInt(inputCantidad.value) || 1) + 1);
+  });
 
-  if (inputCantidad && btnAgregar) {
+  const btnAgregar = $(`.btn-agregar-carrito[data-slug="${producto.slug}"]`);
+  if (btnAgregar && inputCantidad) {
     btnAgregar.addEventListener('click', () => {
       const qty = parseInt(inputCantidad.value) || 1;
       if (producto.stock < qty) {
@@ -412,10 +417,10 @@ const productoFicha = (param) => {
         return;
       }
       agregarAlCarrito(producto.slug, qty);
-      inputCantidad.value = 1;
+      showToast(`${qty} × ${producto.nombre} en tu carrito 🛒`, 'success');
     });
   }
-};
+};;
 
 const carrito = () => {
   cargarCarrito();
@@ -582,79 +587,55 @@ const pedidoConfirmacion = (param) => {
 
 const nosotros = () => {
   $('#app').innerHTML = `
-    <section class="seccion" id="nosotros">
-      <h2>Nuestra Historia</h2>
-      <p>En Dulce Encanto nacimos del amor por las mermeladas artesanales y el deseo de compartir el sabor de la fruta fresca de nuestra tierra.</p>
-      <p>Cada frasco es el resultado de horas de trabajo seleccionando la mejor fruta, cocinando a fuego lento y poniendo todo nuestro cuidado en cada cucharada.</p>
-
-      <div class="nosotros-contenido">
-        <div class="nosotros-grid">
-          <div class="nosotros-grid valores">
-            <h3>Nuestra Filosofía</h3>
-            <ul>
-              <li>Fruta fresca de temporada, siempre.</li>
-              <li>Sin conservantes artificiales.</li>
-              <li>Proceso artesanal: cocción lenta en olla grande.</li>
-              <li>Etiquetado y decorado a mano.</li>
-            </ul>
-          </div>
-          <div class="nosotros-grid imagen">
-            <img src="${frascoSvg('fresa', 120)}" alt="Mermelada artesanal">
-          </div>
-        </div>
-
-        <div class="nosotros-grid">
-          <div class="nosotros-grid valores">
-            <h3>Compromiso de Calidad</h3>
-            <ul>
-              <li>Seleccionamos la fruta en su punto exacto de maduración.</li>
-              <li>Cocemos en pequeños lotes para conservar el sabor.</li>
-              <li>Usamos azúcar de caña y jugo natural de limón.</li>
-              <li>Cada frasco se etiqueta y decora a mano.</li>
-            </ul>
-          </div>
-          <div class="nosotros-grid imagen">
-            <img src="${frascoSvg('mora', 120)}" alt="Mermelada de mora">
-          </div>
-        </div>
+    <section class="seccion">
+      <div class="section-head">
+        <span class="section-kicker">Nuestra historia</span>
+        <h2 class="section-title">Hecho a mano, con el corazón</h2>
       </div>
-
-      <div style="margin-top:40px;padding-top:24px;border-top:2px solid var(--rosa-suave);">
-        <p>"Una explosión de sabor natural en cada cucharada. ¡Hechas con amor y fruta fresca!"</p>
-      </p>
+      <div class="nosotros-contenido">
+        <p>En Dulce Encanto nacimos del amor por las mermeladas artesanales y
+        las ganas de compartir la fruta fresca de nuestra tierra. Cada frasco es
+        horas de selección, cocción lenta y cuidado en cada cucharada.</p>
+      </div>
+      <div class="valores" style="margin-top:36px;">
+        <div class="valor-card"><div class="valor-emoji">🍓</div><div class="valor-titulo">Filosofía</div>
+          Fruta fresca de temporada. Sin conservantes. Cocción lenta en olla grande.</div>
+        <div class="valor-card"><div class="valor-emoji">🏆</div><div class="valor-titulo">Compromiso</div>
+          Fruta en su punto exacto, pequeños lotes, azúcar de caña y limón natural.</div>
+        <div class="valor-card"><div class="valor-emoji">🎀</div><div class="valor-titulo">El toque</div>
+          Cada frasco se etiqueta y decora a mano, uno por uno.</div>
+      </div>
+      <blockquote style="text-align:center;margin:44px auto 0;max-width:640px;
+        font-family:'Pacifico',cursive;font-size:1.5rem;color:var(--primary-dark);">
+        "Una explosión de sabor natural en cada cucharada."
+      </blockquote>
     </section>
   `;
-};
+};;
 
 const contacto = () => {
   $('#app').innerHTML = `
-    <section class="seccion" id="contacto">
-      <h2>Contacto</h2>
-      <div class="contacto-info">
-        <div class="contacto-card">
-          <h3>📍 Dirección</h3>
-          <p>Av. de las Flores 123, Quito</p>
-        </div>
-        <div class="contacto-card">
-          <h3>📞 Teléfono</h3>
-          <p>+593 99 123 4567</p>
-        </div>
-        <div class="contacto-card">
-          <h3>✉️ Email</h3>
-          <p>pedidos@dulceencanto.com</p>
-        </div>
+    <section class="seccion">
+      <div class="section-head">
+        <span class="section-kicker">Contacto</span>
+        <h2 class="section-title">Hablemos 🍓</h2>
       </div>
-      <div style="margin-top:40px;">
-        <h3>Redes Sociales</h3>
-        <div style="display:flex;gap:12px;margin-top:12px;">
-          <a href="#" style="color:var(--morado);text-decoration:none;font-size:18px;">📘 Facebook</a>
-          <a href="#" style="color:#E1306C;text-decoration:none;font-size:18px;">📷 Instagram</a>
-          <a href="#" style="color:#01CF70;text-decoration:none;font-size:18px;">🎬 TikTok</a>
+      <div class="contacto-card">
+        <div class="contacto-info"><strong>📍 Dirección</strong><br>Av. de las Flores 123, Quito</div>
+        <div class="contacto-info"><strong>📞 Teléfono / WhatsApp</strong><br>+593 99 123 4567</div>
+        <div class="contacto-info"><strong>✉️ Email</strong><br>pedidos@dulceencanto.com</div>
+      </div>
+      <div style="text-align:center;margin-top:40px;">
+        <h3 style="color:var(--plum);">Síguenos</h3>
+        <div style="display:flex;gap:14px;justify-content:center;margin-top:12px;flex-wrap:wrap;">
+          <a href="#" class="btn btn-outline dark" style="padding:9px 20px;text-decoration:none;">📘 Facebook</a>
+          <a href="#" class="btn btn-outline dark" style="padding:9px 20px;text-decoration:none;">📷 Instagram</a>
+          <a href="#" class="btn btn-outline dark" style="padding:9px 20px;text-decoration:none;">🎬 TikTok</a>
         </div>
       </div>
     </section>
   `;
-};
+};;
 
 const loginView = () => {
   $('#app').innerHTML = `
@@ -721,7 +702,7 @@ const registroView = () => {
 
 // --- Dashboard Admin ---
 const adminView = async () => {
-  // Doble capa frontend: sin rol admin ni siquiera se carga la vista
+  // Doble capa frontend: sin rol admin no se carga la vista
   if (!estado.usuario || estado.usuario.rol !== 'admin') {
     showToast('Acceso denegado - se requiere rol de administrador', 'error');
     window.location.hash = '#/';
@@ -729,62 +710,55 @@ const adminView = async () => {
   }
 
   $('#app').innerHTML = `
-    <section class="seccion" style="max-width:1200px;margin:0 auto;padding:20px 0;">
-      <div style="background:var(--crema);border-radius:16px;padding:24px;margin-bottom:24px;">
-        <h2>Panel de Administración Dulce Encanto</h2>
-        <p>Bienvenida, ${estado.usuario.nombre}</p>
-      </div>
-      <div id="admin-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;"></div>
-
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;margin-top:32px;">
+    <div class="admin-shell">
+      <div class="admin-header">
         <div>
-          <h3 style="margin:0 0 12px 0;color:var(--morado-profundo);">Ventas últimos 14 días ($)</h3>
-          <div id="chart-ventas-dia" style="height:170px;background:#fff;padding:16px;border-radius:12px;"></div>
+          <h2>Panel de Administración</h2>
+          <p>Bienvenida, ${esc(estado.usuario.nombre)}</p>
         </div>
-        <div>
-          <h3 style="margin:0 0 12px 0;color:var(--morado-profundo);">Top sabores (unidades)</h3>
-          <div id="chart-top-sabores" style="height:170px;background:#fff;padding:16px;border-radius:12px;"></div>
-        </div>
+        <span class="user-chip">🛡️ Modo administrador</span>
       </div>
 
-      <div id="admin-stock-bajo" style="margin-top:32px;background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 6px var(--transparencia);"></div>
+      <div class="kpi-grid" id="admin-kpis"></div>
 
-      <h3 style="margin:32px 0 12px 0;color:var(--morado-profundo);">Productos · ajuste de stock</h3>
-      <div id="admin-productos" style="background:#fff;padding:8px;border-radius:12px;overflow-x:auto;"></div>
+      <div class="admin-grid-2">
+        <div class="chart-card"><h3>Ventas últimos 14 días ($)</h3><div id="chart-ventas-dia" style="height:170px;"></div></div>
+        <div class="chart-card"><h3>Top sabores (unidades)</h3><div id="chart-top-sabores" style="height:170px;"></div></div>
+      </div>
 
-      <h3 style="margin:32px 0 12px 0;color:var(--morado-profundo);">Pedidos</h3>
-      <div id="admin-pedidos" style="background:#fff;padding:8px;border-radius:12px;overflow-x:auto;"></div>
-    </section>
+      <div class="panel" id="admin-stock-bajo"></div>
+      <div class="panel"><h3>Pedidos</h3><div id="admin-pedidos" style="overflow-x:auto;"></div></div>
+      <div class="panel"><h3>Productos · ajuste de stock</h3><div id="admin-productos" style="overflow-x:auto;"></div></div>
+    </div>
   `;
 
   try {
     const r = await api('/admin/resumen');
     const { kpis, ventas_por_dia, top_sabores, bajo_stock, ultimos_pedidos } = r;
+    const fmt = (n) => fmtDinero(n);
 
-    const fmt = (n) => '$' + Number(n).toFixed(2);
     $('#admin-kpis').innerHTML = [
       [fmt(kpis.ganancia_total), 'Ganancia total', `${kpis.unidades_vendidas} frascos vendidos`],
       [kpis.pedidos_totales, 'Pedidos totales', 'Histórico de ventas'],
       [kpis.unidades_vendidas, 'Frascos vendidos', 'Unidades totales'],
-      [fmt(kpis.ventas_totales), 'Facturación', 'Sin cancelados']
-    ].map(([v, t, sub]) => `
-      <div style="background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 6px var(--transparencia);">
-        <div style="font-size:26px;font-weight:bold;color:var(--morado-profundo);">${v}</div>
-        <div style="font-size:14px;color:var(--tinta);">${t}</div>
-        <div style="font-size:12px;color:var(--morado);">${sub}</div>
+      [fmt(kpis.ventas_totales), 'Facturación', 'Sin pedidos cancelados']
+    ].map(([v, t2, sub]) => `
+      <div class="kpi-card">
+        <div class="kpi-valor">${v}</div>
+        <div class="kpi-etiqueta">${t2}</div>
+        <div class="kpi-sub">${sub}</div>
       </div>`).join('');
 
     graficoLineas('chart-ventas-dia',
-      ventas_por_dia.map((d) => ({ etiqueta: d.fecha.slice(5), valor: d.ventas }))
-    );
+      ventas_por_dia.map((d) => ({ etiqueta: d.fecha.slice(5), valor: d.ventas })));
     graficoBarras('chart-top-sabores',
-      top_sabores.map((t) => ({ etiqueta: t.nombre_producto.split(' ')[0], valor: t.unidades }))
-    );
+      top_sabores.map((t2) => ({ etiqueta: t2.nombre_producto.split(' ')[0], valor: t2.unidades })));
 
-    $('#admin-stock-bajo').innerHTML = bajo_stock.length === 0
-      ? '<h3>Stock saludable ✅</h3><p style="color:var(--morado);font-size:14px;">Ningún producto por debajo del mínimo.</p>'
-      : `<h3>Stock Bajo ⚠️</h3><ul style="margin:8px 0 0 18px;">${bajo_stock.map((p) =>
-          `<li style="color:#c0397b;font-size:14px;padding:2px 0;">${p.nombre}: quedan ${p.stock} unidades (mínimo ${p.stock_minimo})</li>`).join('')}</ul>`;
+    const stockBox = $('#admin-stock-bajo');
+    stockBox.innerHTML = bajo_stock.length === 0
+      ? '<h3>Stock saludable ✅</h3>'
+      : `<h3>Stock bajo ⚠️</h3>${bajo_stock.map((p2) =>
+          `<div class="alerta-stock">⚠️ <strong>${esc(p2.nombre)}</strong> — quedan ${p2.stock} unidades (mínimo ${p2.stock_minimo})</div>`).join('')}`;
 
     cargarTablaPedidos();
     cargarTablaProductos();
@@ -798,22 +772,20 @@ async function cargarTablaPedidos() {
   try {
     const pedidos = await api('/admin/pedidos');
     const estados = ['pendiente', 'pagado', 'enviado', 'entregado', 'cancelado'];
-    if (pedidos.length === 0) {
-      cont.innerHTML = '<p style="padding:16px;color:var(--morado);">Aún no hay pedidos.</p>';
+    if (!pedidos.length) {
+      cont.innerHTML = '<p style="padding:16px;color:var(--tinta-suave);">Aún no hay pedidos.</p>';
       return;
     }
-    cont.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:14px;">
-      <thead><tr style="text-align:left;color:var(--morado);">
-      <th style="padding:10px;">Número</th><th style="padding:10px;">Cliente</th>
-      <th style="padding:10px;">Total</th><th style="padding:10px;">Estado</th></tr></thead>
-      <tbody>${pedidos.map((p) => `
-        <tr style="border-top:1px solid #f3e8ef;">
-          <td style="padding:10px;"><strong>${p.numero}</strong></td>
-          <td style="padding:10px;">${p.cliente_nombre}</td>
-          <td style="padding:10px;">$${Number(p.total).toFixed(2)}</td>
-          <td style="padding:10px;">
-            <select data-id="${p.id}" class="pedido-estado" style="padding:4px 8px;border-radius:8px;border:1px solid var(--rosa);">
-              ${estados.map((e) => `<option ${e === p.estado ? 'selected' : ''}>${e}</option>`).join('')}
+    cont.innerHTML = `<table class="tabla-admin">
+      <thead><tr><th>Número</th><th>Cliente</th><th>Total</th><th>Estado</th></tr></thead>
+      <tbody>${pedidos.map((p2) => `
+        <tr>
+          <td><strong>${esc(p2.numero)}</strong></td>
+          <td>${esc(p2.cliente_nombre)}</td>
+          <td>${fmtDinero(p2.total)}</td>
+          <td>
+            <select class="estado-select pedido-estado" data-id="${p2.id}">
+              ${estados.map((e2) => `<option ${e2 === p2.estado ? 'selected' : ''}>${e2}</option>`).join('')}
             </select>
           </td>
         </tr>`).join('')}</tbody></table>`;
@@ -821,33 +793,27 @@ async function cargarTablaPedidos() {
       sel.addEventListener('change', async () => {
         try {
           await api(`/admin/pedidos/${sel.dataset.id}/estado`, { method: 'PATCH', body: { estado: sel.value } });
-          showToast(`Pedido #${sel.dataset.id} → ${sel.value}`, 'success');
-        } catch (e) {
-          showToast(e.message, 'error');
-        }
+          showToast(`Pedido ${sel.dataset.id} → ${sel.value}`, 'success');
+        } catch (e) { showToast(e.message, 'error'); }
       });
     });
-  } catch (e) {
-    cont.innerHTML = `<p style="padding:16px;color:#c0397b;">${e.message}</p>`;
-  }
+  } catch (e) { cont.innerHTML = `<p style="padding:16px;color:var(--error);">${esc(e.message)}</p>`; }
 }
 
 async function cargarTablaProductos() {
   const cont = $('#admin-productos');
   try {
     const productos = await api('/productos');
-    cont.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:14px;">
-      <thead><tr style="text-align:left;color:var(--morado);">
-      <th style="padding:10px;">Producto</th><th style="padding:10px;">Precio</th>
-      <th style="padding:10px;">Stock</th><th style="padding:10px;">Ajustar</th></tr></thead>
-      <tbody>${productos.map((p) => `
-        <tr style="border-top:1px solid #f3e8ef;">
-          <td style="padding:10px;"><strong>${p.nombre}</strong></td>
-          <td style="padding:10px;">$${Number(p.precio).toFixed(2)}</td>
-          <td style="padding:10px;" data-stock="${p.id}">${p.stock}</td>
-          <td style="padding:10px;white-space:nowrap;">
-            <button class="stock-btn" data-id="${p.id}" data-delta="-1" style="cursor:pointer;border:none;background:#fce4ef;border-radius:6px;padding:4px 10px;">−1</button>
-            <button class="stock-btn" data-id="${p.id}" data-delta="1" style="cursor:pointer;border:none;background:#e8f6ef;border-radius:6px;padding:4px 10px;margin-left:6px;">+1</button>
+    cont.innerHTML = `<table class="tabla-admin">
+      <thead><tr><th>Producto</th><th>Precio</th><th>Stock</th><th>Ajustar</th></tr></thead>
+      <tbody>${productos.map((p2) => `
+        <tr>
+          <td><strong>${esc(p2.nombre)}</strong></td>
+          <td>${fmtDinero(p2.precio)}</td>
+          <td data-stock="${p2.id}">${p2.stock}</td>
+          <td style="white-space:nowrap;">
+            <button class="stock-btn" data-id="${p2.id}" data-delta="-1">−</button>
+            <button class="stock-btn" data-id="${p2.id}" data-delta="1">+</button>
           </td>
         </tr>`).join('')}</tbody></table>`;
     cont.querySelectorAll('.stock-btn').forEach((btn) => {
@@ -860,15 +826,15 @@ async function cargarTablaProductos() {
           const celda = cont.querySelector(`[data-stock="${btn.dataset.id}"]`);
           if (celda) celda.textContent = r.stock;
           showToast('Stock actualizado', 'success');
-        } catch (e) {
-          showToast(e.message, 'error');
-        }
+        } catch (e) { showToast(e.message, 'error'); }
       });
     });
-  } catch (e) {
-    cont.innerHTML = `<p style="padding:16px;color:#c0397b;">${e.message}</p>`;
-  }
-}
+  } catch (e) { cont.innerHTML = `<p style="padding:16px;color:var(--error);">${esc(e.message)}</p>`; }
+};
+
+
+
+
 
 // --- Helpers varios ---
 const red2 = (n) => Math.round(n * 100) / 100;
