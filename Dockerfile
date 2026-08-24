@@ -12,7 +12,6 @@ COPY server.js package.json ./
 
 ENV NODE_ENV=production \
     PUERTO=3000 \
-    JWT_SECRET=dulce-secreto-cambia-en-produccion \
     EMAIL_SIMULADO=true
 
 VOLUME ["/app/data"]

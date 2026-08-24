@@ -6,5 +6,5 @@ services:
     plan: free
     healthCheckPath: /api/config
     envVars:
-      - key: JWT_SECRET
+      - key: JWT_SECRETO
         generateValue: true
