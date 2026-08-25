@@ -55,6 +55,8 @@ router.get('/config', (ctx) => {
   ctx.json(200, {
     moneda: CONFIG.MONEDA,
     catalogo_sin_venta: CONFIG.CATALOGO_SIN_VENTA,
+    pago_tarjeta: CONFIG.STRIPE_ENABLED,
+    metodos_pago: CONFIG.METODOS_PAGO_VALIDOS,
     iva: CONFIG.IVA,
     costo_envio: CONFIG.COSTO_ENVIO,
     envio_gratis_desde: CONFIG.ENVIO_GRATIS_DESDE,
@@ -161,6 +163,8 @@ router.get('/auth/me', (ctx) => {
 router.post('/pedidos', async (ctx) => {
   const body = await leerCuerpo(ctx.req);
   const { cliente_nombre, cliente_email, cliente_telefono, cliente_direccion, metodo_pago, items, notas } = body;
+  const metodoValido = CONFIG.METODOS_PAGO.includes(metodo_pago || 'efectivo');
+  if (!metodoValido) throw new HttpError(400, 'Método de pago inválido');
   if (!cliente_nombre || !cliente_email || !Array.isArray(items) || items.length === 0) {
     throw new HttpError(400, 'Datos de cliente e ítems obligatorios');
   }
@@ -655,3 +659,61 @@ router.post('/admin/emails/:id/reenviar', (ctx) => {
 iniciarHeartbeat();
 
 export { router };
+
+
+
+// ── Import/Export CSV de productos ──
+function parsearCSV(texto) {
+  const filas = String(texto).replace(/\r/g, '').split('\n').filter(l => l.trim());
+  if (!filas.length) return [];
+  const sep = filas[0].includes(';') && !filas[0].includes(',') ? ';' : ',';
+  const cabeceras = filas[0].split(sep).map(h => h.trim().toLowerCase());
+  return filas.slice(1).map(linea => {
+    const celdas = linea.split(sep);
+    const obj = {};
+    cabeceras.forEach((h, i) => { obj[h] = (celdas[i] || '').trim(); });
+    return obj;
+  });
+}
+
+router.get('/admin/productos.csv', async (ctx) => {
+  requireAdmin(ctx);
+  const rows = db.prepare(
+    'SELECT slug, nombre, tagline, precio, costo, stock FROM productos ORDER BY id'
+  ).all();
+  const esc = (v) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const csv = ['slug,nombre,tagline,precio,costo,stock']
+    .concat(rows.map(r => [r.slug, esc(r.nombre), esc(r.tagline), r.precio, r.costo, r.stock].join(',')))
+    .join('\n');
+  ctx.res.writeHead(200, {
+    'Content-Type': 'text/csv; charset=utf-8',
+    'Content-Disposition': 'attachment; filename="productos.csv"'
+  });
+  ctx.res.end(csv);
+});
+
+router.post('/admin/productos/importar', async (ctx) => {
+  requireAdmin(ctx);
+  const body = await leerCuerpo(ctx.req);
+  const filas = parsearCSV(body.csv || '');
+  let creados = 0, actualizados = 0, errores = [];
+  for (const f of filas) {
+    if (!f.slug || !f.nombre) { errores.push('fila sin slug/nombre'); continue; }
+    const precio = Number(f.precio) || 0;
+    const costo = Number(f.costo) || 0;
+    const stock = parseInt(f.stock) || 0;
+    const ex = db.prepare('SELECT id, stock FROM productos WHERE slug=?').get(f.slug);
+    if (ex) {
+      db.prepare('UPDATE productos SET nombre=?, tagline=?, precio=?, costo=?, stock=? WHERE id=?')
+        .run(f.nombre, f.tagline || '', precio, costo, stock, ex.id);
+      actualizados++;
+    } else {
+      db.prepare('INSERT INTO productos (slug,nombre,tagline,precio,costo,imagen,stock) VALUES (?,?,?,?,?,?,?)')
+        .run(f.slug, f.nombre, f.tagline || '', precio, costo, (f.slug.split('-')[0] || 'fresa'), stock);
+      creados++;
+    }
+  }
+  ctx.json(200, { creados, actualizados, errores, total: filas.length });
+});
+
+

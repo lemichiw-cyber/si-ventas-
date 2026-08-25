@@ -59,6 +59,11 @@ export const CONFIG = {
     posicion: process.env.MONEDA_POSICION || 'antes'   // antes | despues
   },
   CATALOGO_SIN_VENTA: bool(process.env.CATALOGO_SIN_VENTA, false),
+  // Pagos con tarjeta (sandbox-ready): activa la opción en checkout
+  STRIPE_ENABLED: bool(process.env.STRIPE_ENABLED, false),
+  STRIPE_PUBLIC_KEY: process.env.STRIPE_PUBLIC_KEY || '',
+  // Métodos de pago aceptados (validación server-side)
+  METODOS_PAGO: ['efectivo', 'transferencia', 'tarjeta'],
   NEGOCIO: {
     nombre: 'Dulce Encanto',
     eslogan: 'Una explosión de sabor natural en cada cucharada. ¡Hechas con amor y fruta fresca!',
