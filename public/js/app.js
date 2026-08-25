@@ -960,6 +960,7 @@ async function cargarTablaProductos() {
     });
   } catch (e) {
     cont.innerHTML = `<p style="padding:16px;color:var(--error);">${esc(e.message)}</p>`;
+  if (window.initAdminCSV) window.initAdminCSV();
   }
 };
 
