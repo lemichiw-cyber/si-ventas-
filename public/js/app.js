@@ -133,7 +133,7 @@ const actualizarCarritoDOM = () => {
     $('#app').innerHTML = `
       <section class="seccion" style="min-height:60vh;display:flex;align-items:center;justify-content:center;">
         <div class="carrito-vacio">
-          <div class="carrito-vacio-icono">🛒</div>
+          <div class="carrito-vacio-icono" style="display:flex;align-items:center;justify-content:center;">${frascoSvg('fresa', 56)}</div>
           <h2>Tu carrito está vacío</h2>
           <p>Explora nuestros sabores artesanales y añadí tus favoritos.</p>
           <div class="carrito-empty-acciones">
@@ -385,8 +385,15 @@ const tarjetaProducto = (p) => {
 };
 
 const inicio = () => {
+  const frascosFlotantes = [
+    frascoSvg('fresa', 60), frascoSvg('mora', 52),
+    frascoSvg('durazno', 48), frascoSvg('mango', 56),
+    frascoSvg('guayaba', 44), frascoSvg('mixta', 50)
+  ].map((svg, i) => `<div class="hero-floating" style="top:${[12,22,50,40,60,30][i]}%;${i%2===0?'left':'right'}:${[6,5,2,8,4,3][i]}%;">${svg}</div>`).join('');
+
   $('#app').innerHTML = `
     <section class="hero">
+      ${frascosFlotantes}
       <div class="hero-content">
         <span class="hero-badge">🍓 Hecho a mano · Lotes pequeños</span>
         <h1>Dulce Encanto</h1>
@@ -406,6 +413,7 @@ const inicio = () => {
 
     <section class="seccion" id="destacados">
       <div class="section-head reveal">
+        <div class="section-visual">${frascoSvg('fresa', 80)}</div>
         <span class="section-kicker">Los favoritos</span>
         <h2 class="section-title">Mermeladas Destacadas</h2>
         <p class="section-sub">Las que nuestros clientes vuelven a comprar una y otra vez.</p>
@@ -423,22 +431,22 @@ const inicio = () => {
       </div>
       <div class="valores reveal">
         <div class="valor-card">
-          <div class="valor-icono">🍓</div>
+          <div class="valor-icono">${frutaSvg('fresa', 36)}</div>
           <div class="valor-titulo">Fruta fresca</div>
           <p class="valor-desc">De temporada y en su punto exacto. Seleccionamos cada pieza a mano.</p>
         </div>
         <div class="valor-card">
-          <div class="valor-icono">🔥</div>
+          <div class="valor-icono">${frascoSvg('mora', 34)}</div>
           <div class="valor-titulo">Cocción lenta</div>
           <p class="valor-desc">Pequeños lotes artesanales. Sin prisa, con dedicación.</p>
         </div>
         <div class="valor-card">
-          <div class="valor-icono">🌿</div>
+          <div class="valor-icono">${frutaSvg('durazno', 36)}</div>
           <div class="valor-titulo">Sin conservantes</div>
           <p class="valor-desc">Solo azúcar de caña y limón natural. Nada artificial.</p>
         </div>
         <div class="valor-card">
-          <div class="valor-icono">🎀</div>
+          <div class="valor-icono">${corazonSvg(34)}</div>
           <div class="valor-titulo">Hecho a mano</div>
           <p class="valor-desc">Etiquetado y decorado uno a uno, con amor.</p>
         </div>
@@ -447,6 +455,7 @@ const inicio = () => {
 
     <section class="seccion">
       <div class="section-head reveal">
+        <div class="section-visual">${corazonSvg(48)}</div>
         <span class="section-kicker">Lo que dicen</span>
         <h2 class="section-title">Nuestros clientes</h2>
       </div>
@@ -493,6 +502,7 @@ const catalogo = () => {
   $('#app').innerHTML = `
     <section class="seccion alt-bg" style="min-height:70vh;">
       <div class="section-head">
+        <div class="section-visual">${frascoSvg('mixta', 80)}</div>
         <span class="section-kicker">Catálogo completo</span>
         <h2 class="section-title">Nuestros Sabores</h2>
         <p class="section-sub">${productData.length} mermeladas artesanales disponibles</p>
@@ -505,7 +515,7 @@ const catalogo = () => {
       </div>
       <div id="catalogo-grid" style="display:grid;gap:26px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));"></div>
       <div id="catalogo-vacio" style="display:none;text-align:center;padding:60px 20px;color:var(--tinta-suave);">
-        <div style="font-size:2.4rem;margin-bottom:12px;">🔍</div>
+        <div class="section-visual" style="margin-bottom:16px;">${frascoSvg('fresa', 70)}</div>
         <h3 style="color:var(--plum);margin:0 0 8px;">No encontramos resultados</h3>
         <p>Intenta con otro término de búsqueda.</p>
       </div>
@@ -781,8 +791,11 @@ const nosotros = () => {
   $('#app').innerHTML = `
     <section class="seccion">
       <div class="nosotros-hero">
-        <h2>Hecho a mano, con el corazón</h2>
-        <p>Conocé la historia detrás de cada frasco de Dulce Encanto.</p>
+        <div class="nosotros-hero-deco">${frascoSvg('fresa', 160)}</div>
+        <div class="nosotros-hero-inner">
+          <h2>Hecho a mano, con el corazón</h2>
+          <p>Conocé la historia detrás de cada frasco de Dulce Encanto.</p>
+        </div>
       </div>
 
       <div class="nosotros-timeline reveal">
@@ -806,19 +819,19 @@ const nosotros = () => {
 
       <div class="valores reveal" style="margin-top:48px;">
         <div class="valor-card">
-          <div class="valor-icono">🍓</div>
+          <div class="valor-icono">${frutaSvg('fresa', 34)}</div>
           <div class="valor-titulo">Filosofía</div>
-          <p class="valor-desc">Fruta fresca de temporada. Sin conservantes. Cocción lenta en olla grande.</p>
+          <p class="valor-desc">Fruta fresca de temporada. Sin conservantes. Cocción lenta en olla de hierro.</p>
         </div>
         <div class="valor-card">
-          <div class="valor-icono">🏆</div>
+          <div class="valor-icono">${frascoSvg('durazno', 34)}</div>
           <div class="valor-titulo">Compromiso</div>
           <p class="valor-desc">Fruta en su punto exacto, pequeños lotes, azúcar de caña y limón natural.</p>
         </div>
         <div class="valor-card">
-          <div class="valor-icono">🎀</div>
+          <div class="valor-icono">${corazonSvg(34)}</div>
           <div class="valor-titulo">El toque</div>
-          <p class="valor-desc">Cada frasco se etiqueta y decora a mano, uno por uno.</p>
+          <p class="valor-desc">Cada frasco se etiqueta y decora a mano, uno por uno, con amor.</p>
         </div>
       </div>
 
@@ -828,17 +841,17 @@ const nosotros = () => {
 
       <div class="valores reveal" style="margin-top:48px;">
         <div class="valor-card">
-          <div class="valor-icono">📍</div>
+          <div class="valor-icono" style="background:#FFF3E0;color:#E65100;">📍</div>
           <div class="valor-titulo">Ubicación</div>
           <p class="valor-desc">Av. de las Flores 123, Quito, Ecuador</p>
         </div>
         <div class="valor-card">
-          <div class="valor-icono">📞</div>
+          <div class="valor-icono" style="background:#E8F5E9;color:#2E7D32;">📞</div>
           <div class="valor-titulo">Contacto</div>
           <p class="valor-desc">+593 99 123 4567</p>
         </div>
         <div class="valor-card">
-          <div class="valor-icono">✉️</div>
+          <div class="valor-icono" style="background:#E3F2FD;color:#1565C0;">✉️</div>
           <div class="valor-titulo">Email</div>
           <p class="valor-desc">pedidos@dulceencanto.com</p>
         </div>
@@ -856,12 +869,16 @@ const contacto = () => {
   $('#app').innerHTML = `
     <section class="seccion">
       <div class="contacto-hero">
-        <h2>Hablemos 🍓</h2>
-        <p>¿Tenés una pregunta, un pedido especial o simplemente querés saludar? Escribinos.</p>
+        <div class="nosotros-hero-deco">${frascoSvg('guayaba', 140)}</div>
+        <div class="nosotros-hero-inner">
+          <h2>Hablemos</h2>
+          <p>¿Tenés una pregunta, un pedido especial o simplemente querés saludar? Escribinos.</p>
+        </div>
       </div>
 
       <div class="contacto-grid">
         <div class="contacto-form-card">
+          <div style="text-align:center;margin-bottom:20px;">${frascoSvg('fresa', 48)}</div>
           <h3>Envíanos un mensaje</h3>
           <form id="contacto-form">
             <div class="form-group">
@@ -886,32 +903,36 @@ const contacto = () => {
 
         <div class="contacto-info-cards">
           <div class="contacto-info-card">
-            <div class="contacto-info-icono">📍</div>
+            <div class="contacto-info-icono" style="background:#FFF3E0;color:#E65100;">📍</div>
             <div class="contacto-info-texto">
               <strong>Dirección</strong>
               <span>Av. de las Flores 123, Quito</span>
             </div>
           </div>
           <div class="contacto-info-card">
-            <div class="contacto-info-icono">📞</div>
+            <div class="contacto-info-icono" style="background:#E8F5E9;color:#2E7D32;">📞</div>
             <div class="contacto-info-texto">
               <strong>Teléfono / WhatsApp</strong>
               <span>+593 99 123 4567</span>
             </div>
           </div>
           <div class="contacto-info-card">
-            <div class="contacto-info-icono">✉️</div>
+            <div class="contacto-info-icono" style="background:#E3F2FD;color:#1565C0;">✉️</div>
             <div class="contacto-info-texto">
               <strong>Email</strong>
               <span>pedidos@dulceencanto.com</span>
             </div>
           </div>
           <div class="contacto-info-card">
-            <div class="contacto-info-icono">🕐</div>
+            <div class="contacto-info-icono" style="background:#FCE4EC;color:#C62828;">🕐</div>
             <div class="contacto-info-texto">
               <strong>Horario</strong>
               <span>Lun - Vie: 8:00 - 18:00</span>
             </div>
+          </div>
+          <div class="contacto-info-card" style="justify-content:center;flex-direction:column;text-align:center;padding:24px;">
+            <div style="margin-bottom:12px;">${frascoSvg('mixta', 64)}</div>
+            <div style="font-size:.85rem;color:var(--tinta-suave);">Seguinos en redes sociales</div>
           </div>
         </div>
       </div>
