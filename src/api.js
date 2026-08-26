@@ -1,9 +1,9 @@
 import crypto from 'node:crypto';
 import { db } from './db.js';
 import { CONFIG } from './config.js';
-import { verificarPassword, verificarToken, usuarioDePeticion } from './auth.js';
+import { hashPassword, verificarPassword, verificarToken, usuarioDePeticion } from './auth.js';
 import { HttpError, Router, leerCuerpo } from './http.js';
-import { reintentarPendientes, notificarNuevoPedido, registrarEmail } from './mailer.js';
+import { enviarId, reintentarPendientes, notificarNuevoPedido, registrarEmail } from './mailer.js';
 
 const router = new Router();
 
@@ -321,7 +321,7 @@ router.post('/cupones/validar', async (ctx) => {
   const c = db.prepare('SELECT * FROM cupones WHERE codigo=? AND activo=1').get(codigo);
   if (!c) throw new HttpError(404, 'Cupón no válido');
   const descuento = c.tipo === 'porcentaje'
-    ? red2(sub * c.valor / 100)
+    ? red2(subtotal * c.valor / 100)
     : red2(Math.min(c.valor, subtotal));
   ctx.json(200, { codigo: c.codigo, tipo: c.tipo, valor: c.valor, descuento });
 });
@@ -512,6 +512,7 @@ router.patch('/admin/pedidos/:id/estado', async (ctx) => {
 // POST nuevo producto
 router.post('/admin/productos', async (ctx) => {
   requireAdmin(ctx);
+  const body = await leerCuerpo(ctx.req);
   const { nombre, tagline, descripcion, ingredientes, precio, costo, imagen, destacado, disponible, stock_minimo } = body;
   if (!nombre) throw new HttpError(400, 'Nombre obligatorio');
   const slug = body.slug || nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'producto';
@@ -525,7 +526,7 @@ router.post('/admin/productos', async (ctx) => {
   const res = db.prepare(
     `INSERT INTO productos (slug,nombre,tagline,descripcion,ingredientes,precio,costo,imagen,disponible,destacado,stock_minimo,stock,creado_en)
      VALUES (?,?,?,?,?,?,?,?,?,?,?,0,datetime('now'))`
-  ).run(slug, nombre, tagline || '', descripcion || '', ingredientes || '', Number(prezzo), Number(costo), img, !!disponible, !!destacado, Number(stock_minimo) || 5);
+  ).run(slug, nombre, tagline || '', descripcion || '', ingredientes || '', Number(precio), Number(costo), img, !!disponible, !!destacado, Number(stock_minimo) || 5);
 
   ctx.json(201, { id: res.lastInsertRowid, ...body, slug });
 });

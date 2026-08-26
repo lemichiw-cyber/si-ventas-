@@ -11,7 +11,7 @@ export const COLORS = {
   durazno: { body:'#FFB74D', leaves:'#2E7D32' },
   mango: { body:'#FFC107', leaves:'#2E7D32' },
   guayaba: { body:'#E91E63', leaves:'#2E7D32' },
-  mixta: { body:#FF6D00, gradientFrom:'#FF4D6A', gradientTo:'#FFC107' }
+  mixta: { body:'#FF6D00', gradientFrom:'#FF4D6A', gradientTo:'#FFC107' }
 };
 
 export const frutaSvg = (tipo, size = 24) => {

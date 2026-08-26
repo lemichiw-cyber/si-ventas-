@@ -124,7 +124,7 @@ async function entregar(email) {
   }
 }
 
-async function enviarId(id) {
+export async function enviarId(id) {
   const email = db.prepare('SELECT * FROM emails WHERE id=?').get(id);
   if (!email) return false;
   return entregar(email);

@@ -24,8 +24,8 @@ const toastContainer = $('#toast-container') || (() => { const d = document.crea
 let productData = [];
 let cuponActivo = null; // {codigo, descuento}
 
-// Decodifica el payload de un token firmado (solo lectura de UI)
-const verificarToken = (token = '') => {
+// Decodifica el payload de un token firmado (solo lectura de UI, sin verificación de firma)
+const decodificarPayload = (token = '') => {
   try {
     const b64 = token.split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
     return JSON.parse(atob(b64));
@@ -124,7 +124,6 @@ const cargarCarrito = () => {
 };
 
 const actualizarCarritoDOM = () => {
-  const carrito = () => {
   const itemsConProducto = estado.carrito.map((i) => ({
     ...i,
     prod: productData.find((p) => p.slug === i.slug)
@@ -166,13 +165,13 @@ const actualizarCarritoDOM = () => {
               <a href="#/producto/${slug}" style="text-decoration:none;font-weight:800;color:var(--plum);">${esc(prod.nombre)}</a>
               <div style="font-size:.82rem;color:var(--tinta-suave);">${fmtDinero(prod.precio)} c/u</div>
               <div class="cantidad-selector" style="margin:6px 0 0;transform:scale(.85);transform-origin:left;">
-                <button type="button" data-accion="menos" data-slug="${slug}">−</button>
+                <button type="button" data-accion="menos" data-slug="${slug}" aria-label="Reducir cantidad">−</button>
                 <span class="cantidad-input" style="min-width:44px;text-align:center;">${cantidad}</span>
-                <button type="button" data-accion="mas" data-slug="${slug}">+</button>
+                <button type="button" data-accion="mas" data-slug="${slug}" aria-label="Aumentar cantidad">+</button>
               </div>
             </div>
             <strong style="color:var(--primary-dark);white-space:nowrap;">${fmtDinero(prod.precio * cantidad)}</strong>
-            <button class="quitar-item" data-index="${idxReal}" aria-label="Quitar">×</button>
+            <button class="quitar-item" data-index="${idxReal}" aria-label="Quitar producto">×</button>
           </div>`;
         }).join('')}
       </div>
@@ -200,14 +199,12 @@ const actualizarCarritoDOM = () => {
       else item.cantidad = Math.max(1, item.cantidad - 1);
       localStorage.setItem('dulce-carrito', JSON.stringify(estado.carrito));
       actualizarCarritoDOM();
-      carrito();
     });
   });
 
   document.querySelectorAll('.quitar-item').forEach((b) => {
     b.addEventListener('click', () => {
       quitarDelCarrito(Number(b.dataset.index));
-      carrito();
     });
   });
 
@@ -215,39 +212,14 @@ const actualizarCarritoDOM = () => {
     estado.carrito = [];
     localStorage.removeItem('dulce-carrito');
     actualizarCarritoDOM();
-    carrito();
   });
 
   $('#btn-finalizar')?.addEventListener('click', () => {
     window.location.hash = '#/checkout';
   });
 };
-  if (estado.carrito.length === 0) {
-    itemsDiv.innerHTML = '<p class="carrito-vacio">Tu carrito está vacío</p>';
-    $('#carrito-total')?.remove();
-    return;
-  }
-  let total = 0;
-  itemsDiv.innerHTML = estado.carrito.map((item, i) => {
-    const prod = productData.find(p => p.slug === item.slug);
-    const subtotal = prod.precio * item.cantidad;
-    total += subtotal;
-    return `<div class="carrito-item">
-      <span>${prod.nombre} × ${item.cantidad}</span>
-      <span>${fmtDinero(subtotal)}</span>
-      <button class="quitar-item" data-index="${i}">×</button>
-    </div>`;
-  }).join('') + `<div class="carrito-resumen"><div class="fila"><span>Subtotal</span>${fmtDinero(total)}</div><div class="total">Total: ${fmtDinero(total)}</div></div>`;
-  if (!$('#carrito-total')) {
-    const resDiv = document.createElement('div');
-    resDiv.id = 'carrito-total';
-    resDiv.className = 'carrito-resumen';
-    resDiv.innerHTML = `<div class="fila"><span>Subtotal</span>${fmtDinero(total)}</div><div class="total">Total: ${fmtDinero(total)}</div>`;
-    document.querySelector('#carrito-contenido')?.appendChild(resDiv);
-  };
-};
 
-const agregarAlCarrito = (productoSlug, cantidad = 1) => {
+const agregarAlCarrito = (productoSlug, cantidad = 1, evt) => {
   const existente = estado.carrito.find(i => i.slug === productoSlug);
   if (existente) {
     existente.cantidad += cantidad;
@@ -257,7 +229,7 @@ const agregarAlCarrito = (productoSlug, cantidad = 1) => {
   localStorage.setItem('dulce-carrito', JSON.stringify(estado.carrito));
   showToast('Producto añadido al carrito', 'éxito');
   // Fly to cart animation
-  flyToCartAnimation();
+  flyToCartAnimation(evt);
   actualizarCarritoDOM();
 };
 
@@ -267,10 +239,10 @@ const quitarDelCarrito = (idx) => {
   actualizarCarritoDOM();
 };
 
-const flyToCartAnimation = () => {
+const flyToCartAnimation = (evt) => {
   const cartIcon = document.querySelector('.cart-badge');
   if (!cartIcon) return;
-  const btn = event && event.target ? event.target.closest('.btn-agregar') : null;
+  const btn = evt && evt.target ? evt.target.closest('.btn-agregar') : null;
   if (!btn) return;
   const rectBtn = btn.getBoundingClientRect();
   const rectCart = cartIcon.getBoundingClientRect();
@@ -359,6 +331,13 @@ const router = () => {
     const main = $('#app');
     if (main) main.innerHTML = ''; // Limpiar antes de renderizar
     View(param);
+    // Actualizar título dinámico
+    const titulos = {
+      '': 'Inicio', catalogo: 'Catálogo', carrito: 'Carrito',
+      checkout: 'Finalizar compra', nosotros: 'Nosotros', contacto: 'Contacto',
+      login: 'Iniciar sesión', registro: 'Registrarse', admin: 'Panel Admin'
+    };
+    document.title = `${titulos[ruta] || 'Producto'} | Dulce Encanto`;
   } else {
     $('#app').innerHTML = `<p style="color:var(--rosa-fuerte);">404 - Página no encontrada</p>`;
   }
@@ -442,9 +421,9 @@ const inicio = () => {
   if (grid) {
     grid.innerHTML = productData.slice(0, 3).map((p) => tarjetaProducto(p)).join('');
     grid.querySelectorAll('.btn-agregar[data-slug]').forEach(btn =>
-      btn.addEventListener('click', () => agregarAlCarrito(btn.getAttribute('data-slug'))));
+      btn.addEventListener('click', (e) => agregarAlCarrito(btn.getAttribute('data-slug'), 1, e)));
   }
-};;
+};
 
 const catalogo = () => {
   $('#app').innerHTML = `
@@ -461,9 +440,9 @@ const catalogo = () => {
   if (grid) {
     grid.innerHTML = productData.map((p) => tarjetaProducto(p)).join('');
     grid.querySelectorAll('.btn-agregar[data-slug]').forEach(btn =>
-      btn.addEventListener('click', () => agregarAlCarrito(btn.getAttribute('data-slug'))));
+      btn.addEventListener('click', (e) => agregarAlCarrito(btn.getAttribute('data-slug'), 1, e)));
   }
-};;
+};
 
 const productoFicha = (param) => {
   const producto = productData.find(p => p.slug === param);
@@ -532,19 +511,14 @@ const productoFicha = (param) => {
         showToast(`Solo quedan ${producto.stock} unidades`, 'warning');
         return;
       }
-      agregarAlCarrito(producto.slug, qty);
+      agregarAlCarrito(producto.slug, qty, null);
       showToast(`${qty} × ${producto.nombre} en tu carrito 🛒`, 'success');
     });
   }
-};;
+};
 
 const carrito = () => {
   cargarCarrito();
-  $('#app').innerHTML = `
-    <section class="seccion carrito-vacio" id="carrito-contenido">
-      Tu carrito está vacío
-    </section>
-  `;
 };
 
 const checkout = () => {
@@ -580,16 +554,16 @@ const checkout = () => {
           <small id="cupon-feedback" style="color:#1a9850;"></small>
         </div>
         <div class="form-group">
-          <label>Nombre completo</label>
-          <input type="text" required>
+          <label for="checkout-nombre">Nombre completo</label>
+          <input type="text" id="checkout-nombre" name="nombre" required>
         </div>
         <div class="form-group">
-          <label>Teléfono</label>
-          <input type="tel" required>
+          <label for="checkout-telefono">Teléfono</label>
+          <input type="tel" id="checkout-telefono" name="telefono" required>
         </div>
         <div class="form-group">
-          <label>Dirección de entrega</label>
-          <textarea required></textarea>
+          <label for="checkout-direccion">Dirección de entrega</label>
+          <textarea id="checkout-direccion" name="direccion" required></textarea>
         </div>
         <div class="form-group">
           <label>Método de pago</label>
@@ -644,9 +618,9 @@ const checkout = () => {
 
   document.getElementById('checkout-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const nombre = $('#checkout-form').querySelector('input[type="text"]').value;
-    const telefono = $('#checkout-form').querySelector('input[type="tel"]').value;
-    const direccion = $('#checkout-form').querySelector('textarea').value;
+    const nombre = document.getElementById('checkout-nombre').value;
+    const telefono = document.getElementById('checkout-telefono').value;
+    const direccion = document.getElementById('checkout-direccion').value;
     const metodo_pago = document.querySelector('input[name="metodo_pago"]:checked')?.value || 'efectivo';
 
     try {
@@ -693,7 +667,6 @@ const pedidoConfirmacion = (param) => {
       <h2>¡Gracias por tu pedido!</h2>
       <p>Tu orden <strong>${numero}</strong> ha sido recibida y nuestra cocina ya la está preparando.</p>
       <p>Pronto coordinaremos la entrega al teléfono que nos hayas proporcionado.</p>
-      <p style="margin:24px 0;color:var(--morado);">Ganancia estimada: $${(productData.reduce((s,p)=>s+p.cantidad*0.8,0)*0.80).toFixed(2)}</p>
       <button onclick="window.location.hash='#/catalogo'" style="margin-top:24px;padding:12px 24px;background:var(--rosa-fuerte);color:#fff;border:none;border-radius:10px;font-weight:600;">Continuar comprando</button>
     </section>
     <nav class="nav-links" style="margin-top:30px;justify-content:center;">
@@ -728,7 +701,7 @@ const nosotros = () => {
       </blockquote>
     </section>
   `;
-};;
+};
 
 const contacto = () => {
   $('#app').innerHTML = `
@@ -752,7 +725,7 @@ const contacto = () => {
       </div>
     </section>
   `;
-};;
+};
 
 const loginView = () => {
   $('#app').innerHTML = `
@@ -760,12 +733,12 @@ const loginView = () => {
       <h2>Iniciar Sesión</h2>
       <form id="login-form">
         <div class="form-group">
-          <label>Email</label>
-          <input type="email" required>
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" name="email" required>
         </div>
         <div class="form-group">
-          <label>Contraseña</label>
-          <input type="password" required>
+          <label for="login-password">Contraseña</label>
+          <input type="password" id="login-password" name="password" required>
         </div>
         <button type="submit" class="btn-finalizar" style="width:100%;margin-top:16px;">Ingresar</button>
       </form>
@@ -777,8 +750,8 @@ const loginView = () => {
 
   document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = $('#login-form').querySelector('input[type="email"]').value;
-    const password = $('#login-form').querySelector('input[type="password"]').value;
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
     try {
       await login(email, password);
       showToast('¡Bienvenido de nuevo!', 'success');
@@ -795,16 +768,16 @@ const registroView = () => {
       <h2>Regístrate</h2>
       <form id="registro-form">
         <div class="form-group">
-          <label>Nombre completo</label>
-          <input type="text" required>
+          <label for="registro-nombre">Nombre completo</label>
+          <input type="text" id="registro-nombre" name="nombre" required>
         </div>
         <div class="form-group">
-          <label>Email</label>
-          <input type="email" required>
+          <label for="registro-email">Email</label>
+          <input type="email" id="registro-email" name="email" required>
         </div>
         <div class="form-group">
-          <label>Contraseña</label>
-          <input type="password" required minlength="6">
+          <label for="registro-password">Contraseña</label>
+          <input type="password" id="registro-password" name="password" required minlength="6">
         </div>
         <button type="submit" class="btn-finalizar" style="width:100%;margin-top:16px;">Crear cuenta</button>
       </form>
@@ -816,9 +789,9 @@ const registroView = () => {
 
   document.getElementById('registro-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const nombre = $('#registro-form').querySelector('input[type="text"]').value;
-    const email = $('#registro-form').querySelector('input[type="email"]').value;
-    const password = $('#registro-form').querySelector('input[type="password"]').value;
+    const nombre = document.getElementById('registro-nombre').value;
+    const email = document.getElementById('registro-email').value;
+    const password = document.getElementById('registro-password').value;
     try {
       await register(nombre, email, password);
       showToast('Cuenta creada ✅ Ya puedes iniciar sesión', 'success');
@@ -877,7 +850,8 @@ const adminView = async () => {
       </div>`).join('');
 
     graficoLineas('chart-ventas-dia',
-      ventas_por_dia.map((d) => ({ etiqueta: d.fecha.slice(5), valor: d.ventas })));
+      ventas_por_dia.map((d) => d.fecha.slice(5)),
+      [{ valores: ventas_por_dia.map((d) => d.ventas) }]);
     graficoBarras('chart-top-sabores',
       top_sabores.map((t2) => ({ etiqueta: t2.nombre_producto.split(' ')[0], valor: t2.unidades })));
 
@@ -960,8 +934,8 @@ async function cargarTablaProductos() {
     });
   } catch (e) {
     cont.innerHTML = `<p style="padding:16px;color:var(--error);">${esc(e.message)}</p>`;
-  if (window.initAdminCSV) window.initAdminCSV();
   }
+  if (window.initAdminCSV) window.initAdminCSV();
 };
 
 
@@ -974,6 +948,22 @@ const red2 = (n) => Math.round(n * 100) / 100;
 // PWA: registrar service worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+}
+
+// Hamburger menu toggle
+const hamburger = document.getElementById('hamburger');
+const navLinks = document.getElementById('nav-links');
+if (hamburger && navLinks) {
+  hamburger.addEventListener('click', () => {
+    const abierto = navLinks.classList.toggle('abierto');
+    hamburger.setAttribute('aria-expanded', abierto);
+  });
+  navLinks.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      navLinks.classList.remove('abierto');
+      hamburger.setAttribute('aria-expanded', 'false');
+    });
+  });
 }
 
 // --- Inicio ---
@@ -990,7 +980,7 @@ const init = async () => {
 
   // Verificar token y usuario
   if (estado.token) {
-    const payload = verificarToken(estado.token);
+    const payload = decodificarPayload(estado.token);
     if (payload && payload.rol === 'admin') {
       // Auto-login admin
       estado.usuario = { id: payload.id, rol: 'admin', nombre: 'Dueña Dulce Encanto' };
@@ -1050,9 +1040,6 @@ if (window.location.hash === '#/admin' || window.location.pathname.includes('/ad
 } else {
   init();
 }
-
-// Helper global para acceder a los datos de productos desde el HTML
-window.productData = productData;
 
 // Exportar funciones útiles
 window.agregarAlCarrito = agregarAlCarrito;

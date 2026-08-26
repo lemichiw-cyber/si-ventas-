@@ -32,13 +32,14 @@ export const graficoLineas = (containerId, etiquetas, series) => {
   }
 
   // Dots y labels
-  for (let i = 0; i < series.length; i++) {
-    const s = series[i];
-    svg.innerHTML += `<g fill="var(--tinta)" font-size="10">
-      <circle cx="${xScale(i)}" cy="${yScale(s.valores[0])}" r="3"/>
-      <text x="${xScale(i)}" y="${yScale(s.valores[0]) - 8}" text-anchor="middle">${s.valores[0]}</text>
-    </g>`;
-  }
+  series.forEach((s, si) => {
+    s.valores.forEach((v, vi) => {
+      svg.innerHTML += `<g fill="var(--tinta)" font-size="10">
+        <circle cx="${xScale(vi)}" cy="${yScale(v)}" r="3"/>
+        <text x="${xScale(vi)}" y="${yScale(v) - 8}" text-anchor="middle">${v}</text>
+      </g>`;
+    });
+  });
 
   // Line path
   const pathPoints = series.flatMap((s, si) =>
@@ -57,7 +58,7 @@ export const graficoLineas = (containerId, etiquetas, series) => {
   });
 };
 
-export const graficoBarras = (containerId, datos, color = var(--rosa-fuerte)) => {
+export const graficoBarras = (containerId, datos, color = '#B23A6B') => {
   const w = document.getElementById(containerId).clientWidth || 400;
   const h = 250;
   const margin = { top: 20, right: 20, bottom: 30, left: 50 };
@@ -115,7 +116,7 @@ export const graficoDonut = (containerId, datos) => {
     const y1 = Math.sin(startAngle) * radius;
     const x2 = Math.cos(endAngle) * radius;
     const y2 = Math.sin(endAngle) * radius;
-    const color = i === 0 ? var(--rosa-fuerte) : i === 1 ? var(--morado) : var(--fucsia);
+    const color = i === 0 ? '#B23A6B' : i === 1 ? '#43263F' : '#E05C8A';
     svg.innerHTML += `<path d="M${w/2}h${w/2 - w*0.1}A${radius} ${radius} 0 ${sliceAngle > Math.PI ? 1 : 0} 1 ${x2} ${y2}L${w/2}h${w*0.1 - w*0.2}A${radius} ${radius} 0 0 0 ${w/2 - w*0.1} ${h/2}Z" fill="${color}" />
     <text x="${w/2}" y="${h/2}" text-anchor="middle" fill="#fff" font-family="Quicksand" font-size="14">${d.etiqueta}</text>`;
     startAngle = endAngle;

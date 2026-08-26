@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Dulce Encanto - Mermeladas Artesanales</title>
+  <meta name="description" content="Mermeladas artesanales hechas con fruta fresca de temporada. Dulce Encanto: sabor natural en cada cucharada.">
+  <meta property="og:title" content="Dulce Encanto - Mermeladas Artesanales">
+  <meta property="og:description" content="Mermeladas artesanales hechas con fruta fresca de temporada. Sabor natural en cada cucharada.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="/icons/icon-192.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="canonical" href="/">
   <link rel="stylesheet" href="/css/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,19 +24,24 @@
   <meta name="apple-mobile-web-app-title" content="Dulce Encanto">
 </head>
 <body>
-  <div id="toast-container"></div>
+  <a href="#app" class="skip-link">Saltar al contenido</a>
+  <div id="toast-container" aria-live="polite"></div>
 
   <!-- ══════════ HEADER / NAV ══════════ -->
-  <nav>
+  <nav aria-label="Navegación principal">
     <div class="nav-container">
       <a class="logo" href="#/">Dulce Encanto <span class="corazon">♥</span></a>
+
+      <button class="hamburger" id="hamburger" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-links">
+        <span></span><span></span><span></span>
+      </button>
 
       <div class="nav-links" id="nav-links">
         <a href="#/">Inicio</a>
         <a href="#/catalogo">Catálogo</a>
         <a href="#/nosotros">Nosotros</a>
         <a href="#/contacto">Contacto</a>
-        <a href="#/carrito" id="cart-link">🛒 Carrito <span class="cart-badge" id="cart-badge">0</span></a>
+        <a href="#/carrito" id="cart-link">🛒 Carrito <span class="cart-badge" id="cart-badge" aria-label="Productos en carrito">0</span></a>
       </div>
 
       <div id="user-slot"></div>
@@ -37,7 +49,7 @@
   </nav>
 
   <!-- SPA Root -->
-  <div id="app"></div>
+  <main id="app"></main>
 
   <!-- ══════════ FOOTER ══════════ -->
   <footer>

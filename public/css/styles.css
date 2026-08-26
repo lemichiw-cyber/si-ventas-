@@ -14,7 +14,7 @@
   --accent-soft:   #F7EED8;
   --plum:          #43263F;
   --tinta:         #3D2237;
-  --tinta-suave:   #8A6B84;
+  --tinta-suave:   #6B5066;
   --borde:         #EFDFE8;
   --exito:         #1F9D66;
   --alerta:        #DD8A1E;
@@ -467,6 +467,29 @@ footer {
 .reveal { opacity:0; transform:translateY(26px); transition:opacity .6s ease, transform .6s ease; }
 .reveal-visible { opacity:1; transform:translateY(0); }
 
+/* ══════════ HAMBURGER MENU ══════════ */
+.hamburger {
+  display:none; background:none; border:none; cursor:pointer;
+  width:40px; height:40px; position:relative; z-index:200;
+  flex-direction:column; justify-content:center; align-items:center; gap:5px;
+}
+.hamburger span {
+  display:block; width:22px; height:2px; background:var(--plum);
+  border-radius:2px; transition:transform .3s, opacity .3s;
+}
+.hamburger[aria-expanded="true"] span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+.hamburger[aria-expanded="true"] span:nth-child(2) { opacity:0; }
+.hamburger[aria-expanded="true"] span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+
+/* ══════════ SKIP LINK ══════════ */
+.skip-link {
+  position:absolute; top:-100%; left:16px; z-index:10000;
+  background:var(--primary); color:#fff; padding:12px 24px;
+  border-radius:var(--r-sm); font-weight:700; text-decoration:none;
+  transition:top .2s;
+}
+.skip-link:focus { top:16px; }
+
 /* ══════════ RESPONSIVE ══════════ */
 @media (max-width: 900px) {
   .producto-ficha { grid-template-columns:1fr; padding:24px; gap:26px; }
@@ -475,7 +498,15 @@ footer {
 }
 @media (max-width: 640px) {
   nav { padding:0 14px; }
-  .nav-links a { margin-left:14px; font-size:.84rem; }
+  .hamburger { display:flex; }
+  .nav-links {
+    display:none; position:fixed; top:68px; left:0; right:0; bottom:0;
+    background:rgba(251,247,249,.97); backdrop-filter:blur(14px);
+    flex-direction:column; align-items:center; justify-content:center; gap:24px;
+    z-index:150;
+  }
+  .nav-links.abierto { display:flex; }
+  .nav-links a { margin-left:0; font-size:1.1rem; }
   .seccion { padding:44px 16px; }
   .hero { min-height:70vh; padding:80px 18px 90px; }
   .kpi-grid { grid-template-columns:1fr 1fr; gap:12px; }
