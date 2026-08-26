@@ -131,11 +131,16 @@ const actualizarCarritoDOM = () => {
 
   if (itemsConProducto.length === 0) {
     $('#app').innerHTML = `
-      <section class="seccion carrito-vacio">
-        <div style="font-size:3.4rem;">🛒</div>
-        <h2 style="color:var(--plum);margin-top:10px;">Tu carrito está vacío</h2>
-        <p>Explora nuestros sabores y añade tus favoritas.</p>
-        <a href="#/catalogo" class="btn cta-btn" style="text-decoration:none;margin-top:14px;">Ir al catálogo</a>
+      <section class="seccion" style="min-height:60vh;display:flex;align-items:center;justify-content:center;">
+        <div class="carrito-vacio">
+          <div class="carrito-vacio-icono">🛒</div>
+          <h2>Tu carrito está vacío</h2>
+          <p>Explora nuestros sabores artesanales y añadí tus favoritos.</p>
+          <div class="carrito-empty-acciones">
+            <a href="#/catalogo" class="cta-btn" style="text-decoration:none;">Explorar catálogo</a>
+            <a href="#/inicio" class="btn btn-outline dark" style="text-decoration:none;">Volver al inicio</a>
+          </div>
+        </div>
       </section>`;
     return;
   }
@@ -147,43 +152,48 @@ const actualizarCarritoDOM = () => {
   const envio = subtotal >= gratisDesde ? 0 : costoEnvio;
   const total = red2(subtotal + envio);
   const faltaGratis = envio > 0 ? fmtDinero(gratisDesde - subtotal) : null;
+  const totalItems = itemsConProducto.reduce((acc, i) => acc + i.cantidad, 0);
 
   $('#app').innerHTML = `
-    <section class="seccion" style="max-width:760px;">
-      <div class="section-head" style="margin-bottom:24px;text-align:left;">
-        <h2 class="section-title">Tu carrito</h2>
+    <section class="seccion" style="max-width:800px;">
+      <div class="carrito-header">
+        <h2 class="section-title" style="margin:0;">Tu carrito</h2>
+        <span class="carrito-contador">${totalItems} producto${totalItems !== 1 ? 's' : ''}</span>
       </div>
       <div id="carrito-lista">
         ${itemsConProducto.map(({ slug, cantidad, prod }) => {
           const idxReal = estado.carrito.indexOf(estado.carrito.find((i2) => i2.slug === slug));
           return `
           <div class="carrito-item">
-            <div class="card-media" style="width:64px;height:64px;border-radius:12px;flex-shrink:0;">
-              ${frascoSvg(getSvgKey(prod.imagen), 40)}
+            <div class="carrito-item-img">
+              ${frascoSvg(getSvgKey(prod.imagen), 44)}
             </div>
-            <div style="flex:1;min-width:0;">
-              <a href="#/producto/${slug}" style="text-decoration:none;font-weight:800;color:var(--plum);">${esc(prod.nombre)}</a>
-              <div style="font-size:.82rem;color:var(--tinta-suave);">${fmtDinero(prod.precio)} c/u</div>
+            <div class="carrito-item-info">
+              <a href="#/producto/${slug}" class="carrito-item-nombre">${esc(prod.nombre)}</a>
+              <div class="carrito-item-precio-unit">${fmtDinero(prod.precio)} c/u</div>
               <div class="cantidad-selector" style="margin:6px 0 0;transform:scale(.85);transform-origin:left;">
                 <button type="button" data-accion="menos" data-slug="${slug}" aria-label="Reducir cantidad">−</button>
                 <span class="cantidad-input" style="min-width:44px;text-align:center;">${cantidad}</span>
                 <button type="button" data-accion="mas" data-slug="${slug}" aria-label="Aumentar cantidad">+</button>
               </div>
             </div>
-            <strong style="color:var(--primary-dark);white-space:nowrap;">${fmtDinero(prod.precio * cantidad)}</strong>
+            <div class="carrito-item-total">${fmtDinero(prod.precio * cantidad)}</div>
             <button class="quitar-item" data-index="${idxReal}" aria-label="Quitar producto">×</button>
           </div>`;
         }).join('')}
       </div>
 
-      ${faltaGratis ? `<p style="text-align:center;color:#8a6410;font-weight:700;font-size:.9rem;background:var(--accent-soft);padding:10px;border-radius:12px;margin-top:14px;">
-        🚚 Te faltan ${faltaGratis} para el envío GRATIS</p>` : ''}
+      ${faltaGratis ? `<div class="carrito-envio-bar">
+        🚚 Te faltan <strong style="margin:0 4px;">${faltaGratis}</strong> para envío GRATIS
+      </div>` : `<div class="carrito-envio-bar" style="background:#e8f5e9;color:#2e7d32;">
+        🎉 ¡Envío GRATIS en tu pedido!
+      </div>`}
 
       <div class="checkout-resumen">
         <div class="fila"><span>Subtotal</span><span>${fmtDinero(subtotal)}</span></div>
         <div class="fila"><span>Envío</span><span>${envio === 0 ? 'GRATIS 🎉' : fmtDinero(envio)}</span></div>
         <div class="fila total"><span>Total (sin IVA)</span><span>${fmtDinero(total)}</span></div>
-        <button id="btn-finalizar" class="btn btn-primary btn-finalizar" style="margin-top:16px;width:100%;">
+        <button id="btn-finalizar" class="btn btn-primary btn-finalizar" style="margin-top:16px;width:100%;padding:16px;font-size:1rem;">
           Finalizar compra →
         </button>
         <button id="btn-vaciar" class="btn btn-outline dark" style="margin-top:10px;width:100%;padding:10px;">Vaciar carrito</button>
@@ -386,6 +396,11 @@ const inicio = () => {
           <a href="#/catalogo" class="cta-btn">Explorar sabores</a>
           <a href="#/nosotros" class="btn-outline dark">Nuestra historia</a>
         </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><div class="hero-stat-num">6+</div><div class="hero-stat-label">Sabores</div></div>
+          <div class="hero-stat"><div class="hero-stat-num">100%</div><div class="hero-stat-label">Natural</div></div>
+          <div class="hero-stat"><div class="hero-stat-num">♥</div><div class="hero-stat-label">Hecho a mano</div></div>
+        </div>
       </div>
     </section>
 
@@ -395,7 +410,10 @@ const inicio = () => {
         <h2 class="section-title">Mermeladas Destacadas</h2>
         <p class="section-sub">Las que nuestros clientes vuelven a comprar una y otra vez.</p>
       </div>
-      <div id="destacados-grid" style="display:grid;gap:26px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));"></div>
+      <div id="destacados-grid" style="display:grid;gap:26px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));"></div>
+      <div style="text-align:center;margin-top:36px;" class="reveal">
+        <a href="#/catalogo" class="btn btn-outline dark">Ver todo el catálogo →</a>
+      </div>
     </section>
 
     <section class="seccion alt-bg">
@@ -404,10 +422,56 @@ const inicio = () => {
         <h2 class="section-title">Natural, artesanal, real</h2>
       </div>
       <div class="valores reveal">
-        <div class="valor-card"><div class="valor-emoji">🍓</div><div class="valor-titulo">Fruta fresca</div>De temporada y en su punto exacto.</div>
-        <div class="valor-card"><div class="valor-emoji">🔥</div><div class="valor-titulo">Cocción lenta</div>Pequeños lotes artesanales.</div>
-        <div class="valor-card"><div class="valor-emoji">🌿</div><div class="valor-titulo">Sin conservantes</div>Solo azúcar de caña y limón.</div>
-        <div class="valor-card"><div class="valor-emoji">🎀</div><div class="valor-titulo">Hecho a mano</div>Etiquetado y decorado uno a uno.</div>
+        <div class="valor-card">
+          <div class="valor-icono">🍓</div>
+          <div class="valor-titulo">Fruta fresca</div>
+          <p class="valor-desc">De temporada y en su punto exacto. Seleccionamos cada pieza a mano.</p>
+        </div>
+        <div class="valor-card">
+          <div class="valor-icono">🔥</div>
+          <div class="valor-titulo">Cocción lenta</div>
+          <p class="valor-desc">Pequeños lotes artesanales. Sin prisa, con dedicación.</p>
+        </div>
+        <div class="valor-card">
+          <div class="valor-icono">🌿</div>
+          <div class="valor-titulo">Sin conservantes</div>
+          <p class="valor-desc">Solo azúcar de caña y limón natural. Nada artificial.</p>
+        </div>
+        <div class="valor-card">
+          <div class="valor-icono">🎀</div>
+          <div class="valor-titulo">Hecho a mano</div>
+          <p class="valor-desc">Etiquetado y decorado uno a uno, con amor.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <div class="section-head reveal">
+        <span class="section-kicker">Lo que dicen</span>
+        <h2 class="section-title">Nuestros clientes</h2>
+      </div>
+      <div class="testimonios-grid reveal">
+        <div class="testimonio-card">
+          <p class="testimonio-texto">"La mejor mermelada que he probado. Se nota que es hecha con amor y fruta de verdad."</p>
+          <div class="testimonio-autor">
+            <div class="testimonio-avatar">MC</div>
+            <div><div class="testimonio-nombre">María C.</div><div class="testimonio-rol">Cliente frecuente</div></div>
+          </div>
+        </div>
+        <div class="testimonio-card">
+          <p class="testimonio-texto">"Regalé frascos en Navidad y todos preguntaron dónde los compré. ¡Éxito total!"</p>
+          <div class="testimonio-autor">
+            <div class="testimonio-avatar">AL</div>
+            <div><div class="testimonio-nombre">Ana L.</div><div class="testimonio-rol">Compra recurrente</div></div>
+          </div>
+        </div>
+        <div class="testimonio-card">
+          <p class="testimonio-texto">"El sabor a fruta natural es incomparable. Mi familia ya no quiere otra marca."</p>
+          <div class="testimonio-autor">
+            <div class="testimonio-avatar">JR</div>
+            <div><div class="testimonio-nombre">Carlos R.</div><div class="testimonio-rol">Cliente desde 2024</div></div>
+          </div>
+        </div>
       </div>
     </section>
   `;
@@ -433,15 +497,53 @@ const catalogo = () => {
         <h2 class="section-title">Nuestros Sabores</h2>
         <p class="section-sub">${productData.length} mermeladas artesanales disponibles</p>
       </div>
-      <div id="catalogo-grid" style="display:grid;gap:26px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));"></div>
+      <div class="catalogo-toolbar">
+        <div class="catalogo-search">
+          <input type="text" id="catalogo-buscar" placeholder="Buscar por nombre, sabor o ingrediente..." aria-label="Buscar productos">
+        </div>
+        <span class="catalogo-count" id="catalogo-count">${productData.length} productos</span>
+      </div>
+      <div id="catalogo-grid" style="display:grid;gap:26px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));"></div>
+      <div id="catalogo-vacio" style="display:none;text-align:center;padding:60px 20px;color:var(--tinta-suave);">
+        <div style="font-size:2.4rem;margin-bottom:12px;">🔍</div>
+        <h3 style="color:var(--plum);margin:0 0 8px;">No encontramos resultados</h3>
+        <p>Intenta con otro término de búsqueda.</p>
+      </div>
     </section>
   `;
+
   const grid = $('#catalogo-grid');
-  if (grid) {
-    grid.innerHTML = productData.map((p) => tarjetaProducto(p)).join('');
+  const vacio = $('#catalogo-vacio');
+  const countEl = $('#catalogo-count');
+  const buscar = $('#catalogo-buscar');
+
+  const renderProductos = (lista) => {
+    if (lista.length === 0) {
+      grid.style.display = 'none';
+      vacio.style.display = 'block';
+    } else {
+      grid.style.display = '';
+      vacio.style.display = 'none';
+    }
+    grid.innerHTML = lista.map((p) => tarjetaProducto(p)).join('');
+    countEl.textContent = `${lista.length} producto${lista.length !== 1 ? 's' : ''}`;
     grid.querySelectorAll('.btn-agregar[data-slug]').forEach(btn =>
       btn.addEventListener('click', (e) => agregarAlCarrito(btn.getAttribute('data-slug'), 1, e)));
-  }
+  };
+
+  renderProductos(productData);
+
+  buscar?.addEventListener('input', () => {
+    const q = buscar.value.toLowerCase().trim();
+    if (!q) return renderProductos(productData);
+    const filtrados = productData.filter(p =>
+      p.nombre.toLowerCase().includes(q) ||
+      (p.tagline || '').toLowerCase().includes(q) ||
+      (p.descripcion || '').toLowerCase().includes(q) ||
+      (p.ingredientes || '').toLowerCase().includes(q)
+    );
+    renderProductos(filtrados);
+  });
 };
 
 const productoFicha = (param) => {
@@ -678,53 +780,156 @@ const pedidoConfirmacion = (param) => {
 const nosotros = () => {
   $('#app').innerHTML = `
     <section class="seccion">
-      <div class="section-head">
-        <span class="section-kicker">Nuestra historia</span>
-        <h2 class="section-title">Hecho a mano, con el corazón</h2>
+      <div class="nosotros-hero">
+        <h2>Hecho a mano, con el corazón</h2>
+        <p>Conocé la historia detrás de cada frasco de Dulce Encanto.</p>
       </div>
-      <div class="nosotros-contenido">
-        <p>En Dulce Encanto nacimos del amor por las mermeladas artesanales y
-        las ganas de compartir la fruta fresca de nuestra tierra. Cada frasco es
-        horas de selección, cocción lenta y cuidado en cada cucharada.</p>
+
+      <div class="nosotros-timeline reveal">
+        <div class="timeline-item">
+          <h3>El inicio</h3>
+          <p>Nacimos del amor por las mermeladas artesanales y las ganas de compartir la fruta fresca de nuestra tierra.</p>
+        </div>
+        <div class="timeline-item">
+          <h3>La receta</h3>
+          <p>Cada frasco es horas de selección cuidadosa, cocción lenta en olla de hierro y un toque de limón que realza el sabor natural.</p>
+        </div>
+        <div class="timeline-item">
+          <h3>El compromiso</h3>
+          <p>Sin conservantes artificiales. Solo fruta, azúcar de caña y limón. Ingredientes reales para un sabor real.</p>
+        </div>
+        <div class="timeline-item">
+          <h3>El toque final</h3>
+          <p>Cada frasco se etiqueta y decora a mano, uno por uno, con la dedicación de quien sabe que cada detalle cuenta.</p>
+        </div>
       </div>
-      <div class="valores" style="margin-top:36px;">
-        <div class="valor-card"><div class="valor-emoji">🍓</div><div class="valor-titulo">Filosofía</div>
-          Fruta fresca de temporada. Sin conservantes. Cocción lenta en olla grande.</div>
-        <div class="valor-card"><div class="valor-emoji">🏆</div><div class="valor-titulo">Compromiso</div>
-          Fruta en su punto exacto, pequeños lotes, azúcar de caña y limón natural.</div>
-        <div class="valor-card"><div class="valor-emoji">🎀</div><div class="valor-titulo">El toque</div>
-          Cada frasco se etiqueta y decora a mano, uno por uno.</div>
+
+      <div class="valores reveal" style="margin-top:48px;">
+        <div class="valor-card">
+          <div class="valor-icono">🍓</div>
+          <div class="valor-titulo">Filosofía</div>
+          <p class="valor-desc">Fruta fresca de temporada. Sin conservantes. Cocción lenta en olla grande.</p>
+        </div>
+        <div class="valor-card">
+          <div class="valor-icono">🏆</div>
+          <div class="valor-titulo">Compromiso</div>
+          <p class="valor-desc">Fruta en su punto exacto, pequeños lotes, azúcar de caña y limón natural.</p>
+        </div>
+        <div class="valor-card">
+          <div class="valor-icono">🎀</div>
+          <div class="valor-titulo">El toque</div>
+          <p class="valor-desc">Cada frasco se etiqueta y decora a mano, uno por uno.</p>
+        </div>
       </div>
-      <blockquote style="text-align:center;margin:44px auto 0;max-width:640px;
-        font-family:'Pacifico',cursive;font-size:1.5rem;color:var(--primary-dark);">
-        "Una explosión de sabor natural en cada cucharada."
-      </blockquote>
+
+      <div class="nosotros-quote reveal">
+        <p>"Una explosión de sabor natural en cada cucharada."</p>
+      </div>
+
+      <div class="valores reveal" style="margin-top:48px;">
+        <div class="valor-card">
+          <div class="valor-icono">📍</div>
+          <div class="valor-titulo">Ubicación</div>
+          <p class="valor-desc">Av. de las Flores 123, Quito, Ecuador</p>
+        </div>
+        <div class="valor-card">
+          <div class="valor-icono">📞</div>
+          <div class="valor-titulo">Contacto</div>
+          <p class="valor-desc">+593 99 123 4567</p>
+        </div>
+        <div class="valor-card">
+          <div class="valor-icono">✉️</div>
+          <div class="valor-titulo">Email</div>
+          <p class="valor-desc">pedidos@dulceencanto.com</p>
+        </div>
+      </div>
     </section>
   `;
+
+  const obs = new IntersectionObserver((ents) => ents.forEach(en => {
+    if (en.isIntersecting) { en.target.classList.add('reveal-visible'); obs.unobserve(en.target); }
+  }), { threshold:.12 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 };
 
 const contacto = () => {
   $('#app').innerHTML = `
     <section class="seccion">
-      <div class="section-head">
-        <span class="section-kicker">Contacto</span>
-        <h2 class="section-title">Hablemos 🍓</h2>
+      <div class="contacto-hero">
+        <h2>Hablemos 🍓</h2>
+        <p>¿Tenés una pregunta, un pedido especial o simplemente querés saludar? Escribinos.</p>
       </div>
-      <div class="contacto-card">
-        <div class="contacto-info"><strong>📍 Dirección</strong><br>Av. de las Flores 123, Quito</div>
-        <div class="contacto-info"><strong>📞 Teléfono / WhatsApp</strong><br>+593 99 123 4567</div>
-        <div class="contacto-info"><strong>✉️ Email</strong><br>pedidos@dulceencanto.com</div>
-      </div>
-      <div style="text-align:center;margin-top:40px;">
-        <h3 style="color:var(--plum);">Síguenos</h3>
-        <div style="display:flex;gap:14px;justify-content:center;margin-top:12px;flex-wrap:wrap;">
-          <a href="#" class="btn btn-outline dark" style="padding:9px 20px;text-decoration:none;">📘 Facebook</a>
-          <a href="#" class="btn btn-outline dark" style="padding:9px 20px;text-decoration:none;">📷 Instagram</a>
-          <a href="#" class="btn btn-outline dark" style="padding:9px 20px;text-decoration:none;">🎬 TikTok</a>
+
+      <div class="contacto-grid">
+        <div class="contacto-form-card">
+          <h3>Envíanos un mensaje</h3>
+          <form id="contacto-form">
+            <div class="form-group">
+              <label for="contacto-nombre">Nombre</label>
+              <input type="text" id="contacto-nombre" name="nombre" placeholder="Tu nombre" required>
+            </div>
+            <div class="form-group">
+              <label for="contacto-email">Email</label>
+              <input type="email" id="contacto-email" name="email" placeholder="tu@email.com" required>
+            </div>
+            <div class="form-group">
+              <label for="contacto-asunto">Asunto</label>
+              <input type="text" id="contacto-asunto" name="asunto" placeholder="¿En qué te podemos ayudar?" required>
+            </div>
+            <div class="form-group">
+              <label for="contacto-mensaje">Mensaje</label>
+              <textarea id="contacto-mensaje" name="mensaje" rows="4" placeholder="Escribí tu mensaje aquí..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;padding:14px;">Enviar mensaje</button>
+          </form>
         </div>
+
+        <div class="contacto-info-cards">
+          <div class="contacto-info-card">
+            <div class="contacto-info-icono">📍</div>
+            <div class="contacto-info-texto">
+              <strong>Dirección</strong>
+              <span>Av. de las Flores 123, Quito</span>
+            </div>
+          </div>
+          <div class="contacto-info-card">
+            <div class="contacto-info-icono">📞</div>
+            <div class="contacto-info-texto">
+              <strong>Teléfono / WhatsApp</strong>
+              <span>+593 99 123 4567</span>
+            </div>
+          </div>
+          <div class="contacto-info-card">
+            <div class="contacto-info-icono">✉️</div>
+            <div class="contacto-info-texto">
+              <strong>Email</strong>
+              <span>pedidos@dulceencanto.com</span>
+            </div>
+          </div>
+          <div class="contacto-info-card">
+            <div class="contacto-info-icono">🕐</div>
+            <div class="contacto-info-texto">
+              <strong>Horario</strong>
+              <span>Lun - Vie: 8:00 - 18:00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="social-links">
+        <a href="#" class="social-link">📘 Facebook</a>
+        <a href="#" class="social-link">📷 Instagram</a>
+        <a href="#" class="social-link">🎬 TikTok</a>
+        <a href="#" class="social-link">💬 WhatsApp</a>
       </div>
     </section>
   `;
+
+  document.getElementById('contacto-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    showToast('¡Mensaje enviado! Te responderemos pronto.', 'éxito');
+    e.target.reset();
+  });
 };
 
 const loginView = () => {
