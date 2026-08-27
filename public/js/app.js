@@ -312,49 +312,55 @@ const connectSSE = () => {
 
 // --- Rutas (hash-based) ---
 const routes = {
-  '#/': inicio,
-  '#/catalogo': catalogo,
-  '#/producto/:slug': productoFicha,
-  '#/carrito': carrito,
-  '#/checkout': checkout,
-  '#/pedido/:numero': pedidoConfirmacion,
-  '#/nosotros': nosotros,
-  '#/contacto': contacto,
-  '#/login': loginView,
-  '#/registro': registroView,
-  '#/admin': adminView
+  '/': inicio,
+  '/catalogo': catalogo,
+  '/producto/:slug': productoFicha,
+  '/carrito': carrito,
+  '/checkout': checkout,
+  '/pedido/:numero': pedidoConfirmacion,
+  '/nosotros': nosotros,
+  '/contacto': contacto,
+  '/login': loginView,
+  '/registro': registroView,
+  '/admin': adminView
 };
 
 const router = () => {
   const hash = window.location.hash || '#/';
-  const match = hash.match(/^#\/([^/]+)(?:\/(.+))?$/);
-  const ruta = match ? match[1] : '';
-  const param = match && match[2] ? match[2] : null;
+  const path = hash.replace(/^#/, '') || '/';
 
-  // Ocultar todas las vistas
-  document.querySelectorAll('[data-vista]').forEach(el => el.classList.add('oculto'));
+  let View = null;
+  let param = null;
 
-  // Ejecutar la vista correspondiente
-  const View = routes[ruta];
+  if (routes[path]) {
+    View = routes[path];
+  } else {
+    for (const [pattern, handler] of Object.entries(routes)) {
+      if (!pattern.includes(':')) continue;
+      const regex = new RegExp('^' + pattern.replace(/:[^/]+/g, '([^/]+)') + '$');
+      const m = path.match(regex);
+      if (m) { View = handler; param = m[1]; break; }
+    }
+  }
+
+  const main = $('#app');
+  if (main) main.innerHTML = '';
+
   if (View) {
-    // Remover oculto del contenedor principal
-    const main = $('#app');
-    if (main) main.innerHTML = ''; // Limpiar antes de renderizar
     View(param);
-    // Actualizar título dinámico
     const titulos = {
-      '': 'Inicio', catalogo: 'Catálogo', carrito: 'Carrito',
-      checkout: 'Finalizar compra', nosotros: 'Nosotros', contacto: 'Contacto',
-      login: 'Iniciar sesión', registro: 'Registrarse', admin: 'Panel Admin'
+      '/': 'Inicio', '/catalogo': 'Catálogo', '/carrito': 'Carrito',
+      '/checkout': 'Finalizar compra', '/nosotros': 'Nosotros', '/contacto': 'Contacto',
+      '/login': 'Iniciar sesión', '/registro': 'Registrarse', '/admin': 'Panel Admin'
     };
-    document.title = `${titulos[ruta] || 'Producto'} | Dulce Encanto`;
+    document.title = `${titulos[path] || 'Producto'} | Dulce Encanto`;
   } else {
     $('#app').innerHTML = `<p style="color:var(--rosa-fuerte);">404 - Página no encontrada</p>`;
   }
 
-  // Actualizar navbar activo
   document.querySelectorAll('.nav-links a').forEach(a => {
-    a.classList.toggle('activo', a.getAttribute('href') === hash);
+    const aPath = (a.getAttribute('href') || '').replace(/^#/, '') || '/';
+    a.classList.toggle('activo', aPath === path);
   });
 };
 
