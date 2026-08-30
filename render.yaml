@@ -1,0 +1,30 @@
+# ─────────────────────────────────────────────────────
+# Render Blueprint — despliegue con un solo Web Service.
+# Usa el Dockerfile raíz: nginx (frontend) + API en un contenedor.
+# ─────────────────────────────────────────────────────
+services:
+  - type: web
+    name: dulce-encanto
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeploy: true
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: file:/data/dulce.dev.db
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: AES_KEY
+        generateValue: true
+      - key: BCRYPT_ROUNDS
+        value: "12"
