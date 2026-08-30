@@ -1,2 +1,0 @@
-Coloca aquí tus capturas para el README:
-store.png · product.png · cart.png · checkout.png · admin.png · themes.png

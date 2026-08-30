@@ -1,15 +1,22 @@
 {
   "name": "dulce-encanto",
+  "private": true,
   "version": "1.0.0",
-  "description": "Tienda en línea full-stack de mermeladas artesanales Dulce Encanto — Node.js + SQLite, sin dependencias externas.",
-  "type": "module",
-  "main": "server.js",
+  "description": "Dulce Encanto - Mermeladas Artesanales E-commerce",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev:backend": "npm --workspace backend run dev",
+    "dev:frontend": "npm --workspace frontend run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build": "npm --workspace backend run build && npm --workspace frontend run build",
+    "seed": "npm --workspace backend run seed",
+    "prisma:generate": "npm --workspace backend run prisma:generate",
+    "prisma:push": "npm --workspace backend run prisma:push"
   },
-  "engines": {
-    "node": ">=22.5"
-  },
-  "license": "MIT"
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
 }

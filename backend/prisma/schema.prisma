@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+  // Para producción PostgreSQL, cambia a:
+  // provider = "postgresql"
+  // url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  nombre       String
+  apellido     String
+  telefono     String?  // encriptado AES
+  direccion    String?  // encriptado AES
+  rol          String   @default("cliente") // cliente | admin
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  orders       Order[]
+  reviews      Review[]
+  cartSessions CartSession[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  nombre      String
+  slug        String    @unique
+  imagenUrl   String?   @map("imagen_url")
+  descripcion String?
+  colorAcento String?   @map("color_acento")
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id              String         @id @default(uuid())
+  nombre          String
+  slug            String         @unique
+  descripcion     String
+  precio          Float
+  costoProduccion Float          @map("costo_produccion")
+  stock           Int            @default(100)
+  categoriaId     String         @map("categoria_id")
+  categoria       Category       @relation(fields: [categoriaId], references: [id])
+  imagenPrincipal String?        @map("imagen_principal")
+  imagenesGaleria String?        @map("imagenes_galeria")
+  pesoNeto        String?        @map("peso_neto")
+  ingredientes    String?
+  beneficios      String?
+  esNovedad       Boolean        @default(false) @map("es_novedad")
+  esRecomendado   Boolean        @default(false) @map("es_recomendado")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  nutrition       NutritionFacts?
+  reviews         Review[]
+  orderItems      OrderItem[]
+
+  @@map("products")
+}
+
+model NutritionFacts {
+  id             String  @id @default(uuid())
+  productoId     String  @unique @map("producto_id")
+  producto       Product @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  porcion        String
+  calorias       Int
+  proteinas      Float
+  grasas         Float
+  carbohidratos  Float
+  azucares       Float
+  sodio          Float
+  fibra          Float
+  porcentajeFruta Int    @map("porcentaje_fruta")
+
+  @@map("nutrition_facts")
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  userId          String      @map("user_id")
+  user            User        @relation(fields: [userId], references: [id])
+  estado          String      @default("pendiente") // pendiente/pagado/enviado/entregado/cancelado
+  total           Float
+  direccionEnvio  String?     @map("direccion_envio") // encriptada
+  metodoPago      String?     @map("metodo_pago")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  items           OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id             String  @id @default(uuid())
+  orderId        String  @map("order_id")
+  order          Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId      String  @map("product_id")
+  product        Product @relation(fields: [productId], references: [id])
+  cantidad       Int
+  precioUnitario Float   @map("precio_unitario")
+  subtotal       Float
+
+  @@map("order_items")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  productId String   @map("product_id")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  rating    Int
+  comentario String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([productId, userId])
+  @@map("reviews")
+}
+
+model CartSession {
+  id        String   @id @default(uuid())
+  sessionId String?  @map("session_id")
+  userId    String?  @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id])
+  items     String // JSON string [{product_id, cantidad, precio_snapshot}]
+  expiresAt DateTime @map("expires_at")
+
+  @@map("cart_sessions")
+}

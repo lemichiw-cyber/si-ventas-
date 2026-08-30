@@ -1,148 +1,150 @@
-<div align="center">
+# 🍓 Dulce Encanto - Mermeladas Artesanales
 
-# 🛒 SiVentas
+E-commerce kawaii artesanal con paleta rosa/lila, estética femenina, animaciones dulces.
 
-### Full-Stack E-commerce Store · Zero Dependencies · Ready to Launch
+> Eslogan: "Una explosión de sabor natural en cada cucharada. ¡Hechas con amor y fruta fresca!"
 
-**Vanilla JS SPA · Node.js (zero-dependency) · SQLite · SSE Real-time · Email notifications**
+## Stack
+- **Frontend:** React 18 + TypeScript + Vite + Tailwind CSS + Framer Motion + React Router + Zustand + TanStack Query + Axios
+- **Backend:** Node + Express + TypeScript + Prisma + JWT + Zod + Bcrypt + Helmet/CORS/RateLimit + AES-256
+- **DB:** SQLite para dev (file:./dev.db), PostgreSQL para prod (cambiar provider en `prisma/schema.prisma`)
 
-A complete online store you can rebrand in minutes: product catalog,
-shopping cart, checkout with taxes & shipping, order tracking,
-admin dashboard with live charts and stock alerts.
+## Estructura
+```
+dulce-encanto/
+  backend/  -> Express API
+  frontend/ -> React SPA
+```
 
-[Features](#-features) · [Quick Start](#-quick-start) · [Screenshots](#-screenshots) · [Tech Stack](#-tech-stack) · [Docs](#-documentation) · [License](#-license)
+## Instalación Paso a Paso
 
-</div>
-
----
-
-## ✨ Features
-
-**Storefront**
-- 🍓 **Product catalog** with search, featured products and detail pages
-- 🛒 **Shopping cart** — add/remove, quantities, fly-to-cart animation, live badge
-- 💳 **Checkout** — subtotal + configurable tax & shipping (free shipping threshold)
-- 🎟️ **Coupon system** — percentage/fixed codes validated server-side, stored per order
-- 💱 **Multi-currency ready** — symbol/code/position via env vars
-- 🛍️ **Catalog mode** — `CATALOGO_SIN_VENTA=true` turns the store into a showcase ("Contact us")
-- 📦 **Order tracking** for customers by order number + email
-- ⚡ **Real-time stock updates** via Server-Sent Events — no page refresh
-
-**Admin dashboard** (`#/admin`, double-layer protected)
-- 📊 **KPIs**: revenue, estimated profit, units sold, orders
-- 📈 **Charts** built from scratch (no chart library): 14-day sales line, top flavors bars
-- ⚠️ **Low-stock alerts** pushed live over SSE
-- 🧾 **Orders table** with status workflow (`pendiente → pagado → enviado → entregado`)
-- 🏷️ **Products CRUD** + one-click stock adjuster (every change logged to `movimientos_stock`)
-- 👥 Customer rankings · 📧 Outbound email log with retry queue
-
-**Under the hood**
-- 🚫 **Zero npm dependencies** — runs on plain Node.js ≥22.5 (`node:sqlite` native)
-- 🔐 HMAC-SHA256 signed tokens + scrypt password hashing + timing-safe comparison
-- 🚦 In-memory rate limiting on auth endpoints (30 attempts / 15 min / IP)
-- 🛡️ Security headers out of the box (`nosniff`, `X-Frame-Options`, `Referrer-Policy`)
-- ✉️ Transactional emails via Resend or SMTP — with pending-retry queue and simulated mode
-- 🐳 Docker one-command deploy · PWA installable (manifest + service worker)
-
----
-
-## 🚀 Quick Start
-
-### Option A — Docker
-
+### 1. Clonar & instalar
 ```bash
-git clone https://github.com/YOUR_USERNAME/si-ventas-.git siventas
-cd siventas
-docker compose up --build
+npm install
+npm install --workspace=backend
+npm install --workspace=frontend
 ```
 
-Store → http://localhost:3000 · Admin → http://localhost:3000/#/admin
-
-### Option B — Local (no install step at all)
-
+### 2. Variables de entorno
 ```bash
-node server.js        # that's it. No npm install needed.
+cp .env.example backend/.env
+cp .env.example frontend/.env  # o crea frontend/.env con VITE_API_URL
+```
+Edita `backend/.env`:
+```
+DATABASE_URL="file:./dev.db"
+JWT_ACCESS_SECRET="..."
+JWT_REFRESH_SECRET="..."
+AES_KEY="0123456789abcdef0123456789abcdef"
+PORT=4000
+FRONTEND_URL="http://localhost:5173"
 ```
 
-> Optional config lives in `.env` — see [.env.example](./.env.example).
-
-### Default accounts (seeded on first run)
-
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | `admin@dulceencanto.com` | `Admin123*` |
-| Customer | `cliente@demo.com` | `Cliente123*` |
-
----
-
-## 📸 Screenshots
-
-> 📍 Place captures in `docs/screenshots/`.
-
-| Storefront | Product | Admin dashboard |
-|------------|---------|-----------------|
-| ![store](docs/screenshots/store.png) | ![product](docs/screenshots/product.png) | ![admin](docs/screenshots/admin.png) |
-
-## 🎨 Rebranding in 5 minutes
-
-All branding lives in one place:
-1. Colors & fonts → `public/css/styles.css` CSS variables at the top
-2. Business name, slogan, contact → `src/config.js → CONFIG.NEGOCIO`
-3. Logo/icons → `public/js/svg.js`
-4. Products & seed data → `src/db.js → sembrar()`
-
-Change the demo jam shop into YOUR store by editing those 4 spots.
-
----
-
-## 🧱 Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Frontend | Vanilla JS SPA (hash router), hand-built SVG illustrations, custom charts |
-| Backend | Node.js ≥ 22.5 — **zero external dependencies**, native `node:sqlite` |
-| Auth | HMAC-SHA256 tokens, scrypt hashing, timing-safe verification |
-| Real-time | Server-Sent Events (stock + low-stock alerts) |
-| Email | Resend API or SMTP, retry queue, simulated mode for dev |
-| Deploy | Docker / docker-compose, Render blueprint included |
-
-## 📖 Documentation
-
-| File | Contents |
-|------|----------|
-| [SETUP.md](./SETUP.md) | Local setup, Docker, Render deploy, env reference |
-| [.env.example](./.env.example) | Every environment variable explained |
-| [SELLING-GUIDE.md](./SELLING-GUIDE.md) | Marketplace listing kit |
-| [CHANGELOG.md](./CHANGELOG.md) | Release history |
-
-## 🗂️ Project Structure
-
+Para producción PostgreSQL:
 ```
-├── public/            # SPA served statically (css/, js/, icons/, manifest)
-├── src/
-│   ├── api.js         # All API routes (Router class, ctx pattern)
-│   ├── auth.js        # scrypt hashing + token sign/verify
-│   ├── config.js      # .env loader + business configuration
-│   ├── db.js          # SQLite schema, migrations and demo seed
-│   ├── http.js        # Router, body parser, HttpError helpers
-│   └── mailer.js      # Resend/SMTP sender + retry queue
-├── server.js          # HTTP server: static files + API dispatch
-└── docker-compose.yml # One-command full stack with persistent DB
+DATABASE_URL="postgresql://user:pass@localhost:5432/dulce_encanto?schema=public"
+# y en prisma/schema.prisma cambiar provider a postgresql
 ```
 
-## 🔌 API Overview
+### 3. Base de datos
+```bash
+# Desde la raíz (workspaces) - FORMA CORRECTA:
+npm run prisma:generate          # equivale a: npm --workspace backend run prisma:generate
+npm run prisma:push              # equivale a: npm --workspace backend run prisma:push
+# O si usas migrate:
+# npm --workspace backend run prisma:migrate
 
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| GET | `/api/config` · `/api/productos[/:slug]` | public |
-| POST | `/api/auth/registro` · `/api/auth/login` · `/api/auth/admin` | public (rate-limited) |
-| GET | `/api/auth/me` · `/api/pedidos/:numero?email=` | user |
-| POST | `/api/pedidos` | user |
-| GET | `/api/eventos` (SSE stock stream) | public |
-| GET/PATCH | `/api/admin/pedidos` · `/pedidos/:id/estado` | admin |
-| CRUD | `/api/admin/productos[/:id][/stock]` | admin |
-| GET | `/api/admin/resumen` · `/movimientos` · `/clientes` · `/emails` | admin |
+npm run seed                     # crea 5 productos, 5 categorías, 2 usuarios
 
-## 📄 License
+# Alternativa entrando a backend:
+cd backend
+npx prisma generate
+npx prisma db push
+npm run seed
+cd ..
+```
 
-Released under the [MIT License](./LICENSE).
+> ⚠️ No uses `npx prisma generate --workspace=backend` (esa flag no existe en Prisma). Usa los scripts de npm de arriba.
+
+Usuarios seed:
+- `admin@dulceencanto.com` / `Admin123!` (rol admin)
+- `cliente@test.com` / `Cliente123!` (rol cliente)
+
+### 4. Desarrollo
+```bash
+# Instalar concurrently si no está (ya incluido en root package.json):
+npm install
+
+# Terminal 1
+npm run dev:backend  # http://localhost:4000  -> API
+# Terminal 2
+npm run dev:frontend # http://localhost:5173  -> Web kawaii
+# O ambos a la vez (requiere concurrently):
+npm run dev
+```
+
+Health: `GET http://localhost:4000/api/health` (no `GET /`, el backend solo sirve `/api/*`; el frontend está en :5173)
+
+### 5. Build
+```bash
+npm run build
+```
+
+## API Endpoints
+
+| Método | Ruta | Auth |
+|--------|------|------|
+| POST | /api/auth/register | - |
+| POST | /api/auth/login | - |
+| POST | /api/auth/refresh | - |
+| POST | /api/auth/logout | - |
+| POST | /api/auth/forgot-password | - |
+| GET | /api/auth/me | Bearer |
+| PUT | /api/auth/me | Bearer |
+| GET | /api/products?categoria&precio_min&precio_max&novedades&recomendados&search&sort&page&limit | - |
+| GET | /api/products/:slug | - |
+| GET | /api/products/:id/nutrition | - |
+| GET | /api/products/:id/reviews | - |
+| POST | /api/products | admin |
+| PUT | /api/products/:id | admin |
+| DELETE | /api/products/:id | admin |
+| GET | /api/cart | - (X-Session-Id) |
+| POST | /api/cart/items | - |
+| PUT | /api/cart/items/:productId | - |
+| DELETE | /api/cart/items/:productId | - |
+| POST | /api/orders | Bearer |
+| GET | /api/orders | Bearer (admin ve todas) |
+| GET | /api/orders/:id | Bearer |
+| PUT | /api/orders/:id/status | admin |
+| POST | /api/reviews | Bearer (compra verificada) |
+
+### Colección Postman
+Importa `postman_collection.json` (incluido). Variables: `{{baseUrl}} = http://localhost:4000/api`, `{{token}}`.
+
+Ejemplo login:
+```bash
+curl -X POST http://localhost:4000/api/auth/login -H "Content-Type: application/json" -d '{"email":"cliente@test.com","password":"Cliente123!"}'
+```
+
+## Seguridad
+- Bcrypt 12 rounds
+- AES-256-CBC para telefono/direccion y direccion_envio
+- JWT 15m access + 7d refresh en httpOnly cookies + Bearer
+- Helmet, CORS, Rate Limit 100/15min y 5 login/min, Zod validation, sanitización
+
+## Diseño
+- Colores: #D8B4E2, #FFB7C5, #FFF0F5, #F8F4FF, #FFD700, #4A0E4E
+- Bordes 16-24px, sombras suaves, gradientes rosa→lila, badges ¡Nuevo!, iconos fruta opacidad 10%
+- Fuentes: Pacifico (títulos), Poppins/Nunito (cuerpo)
+- Animaciones: framer-motion fade+slide, hover scale 1.03, bounce en badge carrito
+
+## Docker (opcional)
+```bash
+docker-compose up --build
+```
+
+## Responsive & Accesibilidad
+- Tailwind responsive grid, imágenes lazy, aria-labels, contraste validado, navegación teclado.
+
+## Performance
+- Vite code splitting, lazy loading imágenes, React Query cache.

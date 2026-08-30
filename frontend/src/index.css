@@ -1,0 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body { font-family: 'Poppins', 'Nunito', system-ui, sans-serif; color: #4A0E4E; }
+.font-script { font-family: 'Pacifico', cursive; }
