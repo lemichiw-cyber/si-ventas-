@@ -11,7 +11,7 @@ import Novedades from './pages/Novedades';
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={(import.meta as any).env.VITE_BASE || '/'}>
       <Navbar />
       <main className="min-h-[60vh]">
         <Routes>

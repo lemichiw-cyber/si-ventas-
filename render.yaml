@@ -28,3 +28,5 @@ services:
         generateValue: true
       - key: BCRYPT_ROUNDS
         value: "12"
+      - key: FRONTEND_URL
+        value: https://dulce-encanto.onrender.com,https://lemichiw-cyber.github.io,http://localhost:5173

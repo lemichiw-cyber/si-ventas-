@@ -32,7 +32,7 @@ export default function Home() {
             </div>
           </motion.div>
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative">
-            <img src="https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=700" alt="Frascos de mermelada" className="rounded-[32px] shadow-soft w-full object-cover h-[420px]" />
+            <img src="https://images.unsplash.com/photo-1700166581152-5489eb689333?w=700&q=80" alt="Frasco de mermelada artesanal con fresas" className="rounded-[32px] shadow-soft w-full object-cover h-[420px]" />
             <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute -bottom-6 -left-6 bg-white p-4 rounded-3xl shadow-pink border border-pink-50">
               <p className="text-sm text-gray-500">Más vendido</p><p className="font-semibold text-morado-oscuro">Fresa Artesanal 🍓</p><p className="text-rosa-pastel font-bold">$2.50</p>
             </motion.div>

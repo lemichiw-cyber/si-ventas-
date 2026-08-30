@@ -34,7 +34,7 @@ async function main() {
       precio: 2.5, costoProduccion: 1.7, stock: 120, categoriaId: catMap['fresa'],
       pesoNeto: '250g', ingredientes: ['Fresa fresca', 'Azúcar', 'Limón'], beneficios: ['Sin conservadores', '100% fruta natural', 'Hecha con amor'],
       esNovedad: false, esRecomendado: true,
-      imagenPrincipal: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=600',
+      imagenPrincipal: 'https://images.unsplash.com/photo-1700166581152-5489eb689333?w=600&q=80',
       imagenesGaleria: ['https://images.unsplash.com/photo-1543528171-ed40a2604160?w=600'],
       nutrition: { porcion: '20g', calorias: 45, proteinas: 0.1, grasas: 0, carbohidratos: 11, azucares: 10, sodio: 1, fibra: 0.3, porcentajeFruta: 65 },
     },
