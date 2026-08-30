@@ -5,7 +5,7 @@
 # ─────────────────────────────────────────────────────
 
 # ── Etapa 1: Build del backend ──
-FROM node:20-alpine AS backend-build
+FROM node:20-slim AS backend-build
 WORKDIR /app/backend
 COPY backend/package.json ./
 COPY backend/tsconfig.json ./
@@ -15,7 +15,7 @@ COPY backend/src ./src
 RUN npm run build
 
 # ── Etapa 2: Build del frontend ──
-FROM node:20-alpine AS frontend-build
+FROM node:20-slim AS frontend-build
 WORKDIR /app/frontend
 # VITE_API_URL relativo => same-origin (sin CORS, ruta pública única)
 ARG VITE_API_URL=/api
@@ -28,8 +28,10 @@ COPY frontend/src ./src
 RUN npm install && npm run build
 
 # ── Etapa 3: Runtime (Web Service único) ──
-FROM node:20-alpine
-RUN apk add --no-cache nginx gettext tini
+FROM node:20-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      nginx gettext-base tini openssl \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app/backend
 COPY --from=backend-build /app/backend/node_modules ./node_modules
