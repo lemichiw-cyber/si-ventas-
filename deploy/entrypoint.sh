@@ -3,7 +3,8 @@ set -e
 echo "🍓 Dulce Encanto — iniciando..."
 
 # Puerto público que Render asigna (si no está definido, usamos 10000)
-PUBLIC_PORT="${PORT:-10000}"
+# OJO: debe estar exportado para que envsubst lo lea del entorno.
+export PUBLIC_PORT="${PORT:-10000}"
 
 # Disco persistente de Render para SQLite
 mkdir -p /data
@@ -17,7 +18,7 @@ NEED_SEED=$(node -e 'const {PrismaClient}=require("@prisma/client");const p=new 
 
 if [ "$NEED_SEED" = "yes" ]; then
   echo "→ Sembrando datos de demostración (primera ejecución)..."
-  npx ts-node prisma/seed.ts || echo "⚠️ Seed falló — puedes ejecutarlo manualmente."
+  node dist-seed/backend/prisma/seed.js || echo "⚠️ Seed falló — puedes ejecutarlo manualmente."
 else
   echo "→ Base de datos ya inicializada, se omite el seed."
 fi
