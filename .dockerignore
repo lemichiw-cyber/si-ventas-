@@ -14,6 +14,3 @@ npm-debug.log*
 .DS_Store
 README.md
 docker-compose.yml
-Dockerfile
-render.yaml
-deploy/
