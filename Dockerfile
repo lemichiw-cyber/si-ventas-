@@ -7,6 +7,8 @@
 # ── Etapa 1: Build del backend ──
 FROM node:20-slim AS backend-build
 WORKDIR /app/backend
+RUN apt-get update && apt-get install -y --no-install-recommends openssl \
+    && rm -rf /var/lib/apt/lists/*
 COPY backend/package.json ./
 COPY backend/tsconfig.json ./
 COPY backend/prisma ./prisma
@@ -51,4 +53,4 @@ RUN chmod +x /entrypoint.sh
 ENV PORT=4000
 EXPOSE 10000
 
-CMD ["/sbin/tini", "--", "/entrypoint.sh"]
+CMD ["/usr/bin/tini", "--", "/entrypoint.sh"]
