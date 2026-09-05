@@ -3,9 +3,7 @@ generator client {
 }
 
 datasource db {
-  // Para Supabase/PostgreSQL: crear un symlink o usar prisma generate con --schema-file
-  // Ver .env.supabase.example para la configuración de Supabase
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -57,6 +55,7 @@ model Product {
   esNovedad       Boolean        @default(false) @map("es_novedad")
   esRecomendado   Boolean        @default(false) @map("es_recomendado")
   createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
   nutrition       NutritionFacts?
   reviews         Review[]
   orderItems      OrderItem[]
@@ -89,10 +88,10 @@ model Order {
   total           Float
   direccionEnvio  String?     @map("direccion_envio") // encriptada
   metodoPago      String?     @map("metodo_pago")
-  trackingNumber  String?     @map("tracking_number") // número de guía/envío
-  trackingCarrier String?     @map("tracking_carrier") // carrier (ej: Fedex, DHL, Correos)
-  shippedAt       DateTime?   @map("shipped_at") // fecha de envío
-  deliveredAt     DateTime?   @map("delivered_at") // fecha de entrega
+  trackingNumber  String?     @map("tracking_number") // encriptada AES-256-GCM
+  trackingCarrier String?     @map("tracking_carrier")
+  shippedAt       DateTime?   @map("shipped_at")
+  deliveredAt     DateTime?   @map("delivered_at")
   createdAt       DateTime    @default(now()) @map("created_at")
   updatedAt       DateTime    @updatedAt @map("updated_at")
   items           OrderItem[]
