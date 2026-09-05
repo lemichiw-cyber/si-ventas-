@@ -1,73 +1,113 @@
 # ─────────────────────────────────────────────────────
-# Supabase Migration — Instrucciones para aplicar el schema
+# Guía: Conectar Dulce Encanto a Supabase
 # ─────────────────────────────────────────────────────
 
-## Opción 1: Usar el SQL Editor de Supabase (más fácil)
+## Estado actual verificado
 
-1. Ve a https://supabase.com/dashboard → tu proyecto → **SQL Editor**
-2. Pega el contenido de `supabase/migrations/20260904_create_schema.sql`
-3. Haz clic en **RUN** para crear todas las tablas
+- ✅ **Proyecto Supabase activo**: `jzetdfegilsdphbfusmm` 
+- ✅ **Anon key funciona**: `sb_publishable_C3L7H7yEH3NXnnFlPJekuQ_R9Ngdzli`
+- ❌ **Tablas de la app NO creadas**: `users`, `products`, `orders`, etc.
+- ❌ **PostgreSQL directo**: No accesible desde este entorno (IPv6 unreachable)
+- ❌ **Pooler**: Devuelve "tenant/user not found" (posible problema con el password)
 
-## Opción 2: Usar Prisma (requiere conexión al DB)
+## Solución 1: Aplicar schema manualmente (RECOMENDADO)
 
-1. En tu máquina local, crea un `.env` con la DATABASE_URL de Supabase:
+### Paso 1: Crear las tablas
+
+1. Ve a: https://supabase.com/dashboard/project/jzetdfegilsdphbfusmm
+2. En el menú lateral, haz clic en **SQL Editor**
+3. Haz clic en **New Query** (Nuevo query)
+4. Pega el contenido del archivo:
    ```
-   DATABASE_URL="postgresql://postgres:[TU_PASSWORD]@db.jzetdfegilsdphbfusmm.supabase.co:5432/postgres"
+   supabase/migrations/20260904_create_schema.sql
    ```
-2. Ejecuta:
-   ```bash
-   npx prisma generate --schema=prisma/schema.supabase.prisma
-   npx prisma db push --schema=prisma/schema.supabase.prisma --accept-data-loss
-   ```
+5. Haz clic en **RUN** (▶)
 
-## Opción 3: Usar el script de migración
+### Paso 2: Insertar datos de prueba (seed)
+
+Después de crear las tablas, puedes insertar datos usando Prisma:
 
 ```bash
-# En tu máquina local (con psql instalado)
-psql "postgresql://postgres:[PASSWORD]@db.jzetdfegilsdphbfusmm.supabase.co:5432/postgres" \
-  -f supabase/migrations/20260904_create_schema.sql
+# Instalar dependencias
+cd backend
+npm install
+
+# Generar cliente Prisma para PostgreSQL
+npm run prisma:generate:supabase
+
+# Push el schema (alternativa: usa npx prisma db push --schema=prisma/schema.supabase.prisma)
+# Configura DATABASE_URL con tu password URL-encoded:
+# postgresql://postgres.jzetdfegilsdphbfusmm:[PASSWORD-URL-ENCODED]@aws-0-us-west-1.pooler.supabase.com:5432/postgres?sslmode=require
+
+# Ejecutar seed
+DATABASE_URL="postgresql://postgres.jzetdfegilsdphbfusmm:[PASSWORD-URL-ENCODED]@aws-0-us-west-1.pooler.supabase.com:5432/postgres?sslmode=require" \
+npx prisma db seed --schema=prisma/schema.supabase.prisma
 ```
 
-## Opción 4: Vía Supabase CLI
+## Solución 2: Usar Supabase CLI (si tienes el service_role key)
 
 ```bash
-# Instala la CLI
-npm install -g supabase
+# 1. Obtén tu service_role key:
+#    Dashboard → Project Settings → API → service_role → "Reveal"
+export SUPABASE_ACCESS_TOKEN="<tu-service-role-key>"
 
-# Login
-supabase login
+# 2. Enlaza el proyecto
+npx supabase link --project-ref jzetdfegilsdphbfusmm
 
-# Enlaza tu proyecto
-supabase link --project-ref jzetdfegilsdphbfusmm
-
-# Aplica la migración
-supabase db push
+# 3. Push el schema
+npx supabase db push
 ```
 
-## 🚨 Importante: El password de la base de datos
+## Password URL-encoding
 
-El password `$NDR·$S,.-´+`¡` contiene caracteres especiales. Si usas Prisma o psql, asegúrate de **URL-encode** el password:
+Tu password contiene caracteres especiales. Debes URL-encodearlo:
 
+| Carácter | Original | URL-encoded |
+|---|---|---|
+| `$` | `$` | `%24` |
+| `·` | `·` | `%C2%B7` |
+| `,` | `,` | `%2C` |
+| `.` | `.` | `. ` (no necesita encoding) |
+| `-` | `-` | `-` (no necesita encoding) |
+| `´` | `´` | `%C2%B4` |
+| `+` | `+` | `%2B` |
+| ``` ` ``` | `` ` `` | `%60` |
+| `¡` | `¡` | `%C2%A1` |
+
+**Password URL-encoded completo:**
 ```
-postgresql://postgres:%24NDR%C2%B7%24S%2C.-%C2%B4%2B%60%C2%A1@db.jzetdfegilsdphbfusmm.supabase.co:5432/postgres
+%24NDR%C2%B7%24S%2C.-%C2%B4%2B%60%C2%A1
 ```
 
-O usa las comillas adecuadas en tu `.env`.
+**DATABASE_URL completa:**
+```
+postgresql://postgres.jzetdfegilsdphbfusmm:%24NDR%C2%B7%24S%2C.-%C2%B4%2B%60%C2%A1@aws-0-us-west-1.pooler.supabase.com:5432/postgres?sslmode=require
+```
+
+## Configuración en Render
+
+Una vez que hayas aplicado el schema en Supabase:
+
+1. Ve a https://dashboard.render.com → tu servicio `dulce-encanto`
+2. **Environment** → **Environment Variables**
+3. Cambia:
+   - Comenta/remueve: `DATABASE_URL = file:/data/dulce.dev.db`
+   - Agrega: `DATABASE_URL = postgresql://postgres.jzetdfegilsdphbfusmm:%24NDR%C2%B7%24S%2C.-%C2%B4%2B%60%C2%A1@aws-0-us-west-1.pooler.supabase.com:5432/postgres?sslmode=require`
+4. **Manual Deploy** → selecciona el commit más reciente → **Deploy**
 
 ## Verificar conexión
 
 ```bash
-# Ver conexión con Node.js + pg
+# Usando psql (si está instalado)
+psql "postgresql://postgres.jzetdfegilsdphbfusmm:[PASSWORD-ENCODED]@aws-0-us-west-1.pooler.supabase.com:5432/postgres?sslmode=require"
+
+# Usando Node.js
 node -e "
-const pg = require('pg');
-const c = new pg.Client({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
-c.connect().then(async () => {
-  const r = await c.query('SELECT version()');
-  console.log(r.rows[0]);
-  c.end();
-}).catch(e => console.error(e.message));
+const { createClient } = require('@supabase/supabase-js');
+const supabase = createClient(
+  'https://jzetdfegilsdphbfusmm.supabase.co',
+  'sb_publishable_C3L7H7yEH3NXnnFlPJekuQ_R9Ngdzli'
+);
+supabase.from('products').select('*').limit(1).then(r => console.log(r));
 "
 ```
