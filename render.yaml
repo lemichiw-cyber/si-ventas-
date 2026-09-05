@@ -18,24 +18,26 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # ── SQLite (default) ──
+      # Para usar SQLite localmente o en Render con disco persistente
       - key: DATABASE_URL
         value: file:/data/dulce.dev.db
-      - key: DATABASE_PROVIDER
-        value: sqlite
       # ── Supabase (PostgreSQL) ──
-      # Para usar Supabase, cambia DATABASE_PROVIDER a "postgresql" y DATABASE_URL a tu string de conexión:
+      # Para usar Supabase, comenta DATABASE_URL de arriba y descomenta esto:
+      # - key: DATABASE_URL
+      #   value: "postgresql://postgres:[PASSWORD]@db.jzetdfegilsdphbfusmm.supabase.co:5432/postgres?sslmode=require"
       # - key: DATABASE_PROVIDER
       #   value: postgresql
-      # - key: DATABASE_URL
-      #   value: postgresql://postgres:[PASSWORD]@db.jzetdfegilsdphbfusmm.supabase.co:5432/postgres
-      # - key: SUPABASE_URL
-      #   value: https://jzetdfegilsdphbfusmm.supabase.co
+      # ── Supabase API (para notificaciones) ──
+      - key: SUPABASE_URL
+        value: https://jzetdfegilsdphbfusmm.supabase.co
       # - key: SUPABASE_SERVICE_ROLE_KEY
-      #   value: <tu-service-role-key>
+      #   value: <obten tu service_role key de: supabase.com → Project Settings → API → service_role>
       # - key: SUPABASE_ANON_KEY
       #   value: sb_publishable_C3L7H7yEH3NXnnFlPJekuQ_R9Ngdzli
       # - key: SUPABASE_PROJECT_REF
       #   value: jzetdfegilsdphbfusmm
+      # ── JWT & Encryption ──
       - key: JWT_ACCESS_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
@@ -44,6 +46,7 @@ services:
         generateValue: true
       - key: AES_KEY_PREVIOUS
         value: ""
+      # ── Misc ──
       - key: BCRYPT_ROUNDS
         value: "12"
       - key: FRONTEND_URL
