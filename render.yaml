@@ -20,12 +20,30 @@ services:
         value: production
       - key: DATABASE_URL
         value: file:/data/dulce.dev.db
+      - key: DATABASE_PROVIDER
+        value: sqlite
+      # ── Supabase (PostgreSQL) ──
+      # Para usar Supabase, cambia DATABASE_PROVIDER a "postgresql" y DATABASE_URL a tu string de conexión:
+      # - key: DATABASE_PROVIDER
+      #   value: postgresql
+      # - key: DATABASE_URL
+      #   value: postgresql://postgres:[PASSWORD]@db.jzetdfegilsdphbfusmm.supabase.co:5432/postgres
+      # - key: SUPABASE_URL
+      #   value: https://jzetdfegilsdphbfusmm.supabase.co
+      # - key: SUPABASE_SERVICE_ROLE_KEY
+      #   value: <tu-service-role-key>
+      # - key: SUPABASE_ANON_KEY
+      #   value: sb_publishable_C3L7H7yEH3NXnnFlPJekuQ_R9Ngdzli
+      # - key: SUPABASE_PROJECT_REF
+      #   value: jzetdfegilsdphbfusmm
       - key: JWT_ACCESS_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
         generateValue: true
       - key: AES_KEY
         generateValue: true
+      - key: AES_KEY_PREVIOUS
+        value: ""
       - key: BCRYPT_ROUNDS
         value: "12"
       - key: FRONTEND_URL

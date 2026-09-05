@@ -16,9 +16,25 @@ export default function Checkout() {
   if (!user) return <div className="max-w-xl mx-auto px-4 py-16 text-center"><p className="text-morado-oscuro">Debes iniciar sesión para pagar</p><Link to="/login" className="inline-block mt-4 bg-morado-oscuro text-white px-6 py-2 rounded-full">Ir a Login</Link></div>;
   if (orderId) return (
     <div className="max-w-xl mx-auto px-4 py-16 text-center bg-white rounded-[32px] shadow-soft border border-pink-50">
-      <p className="text-6xl">🎉</p><h2 className="font-script text-3xl text-morado-oscuro mt-4">¡Compra confirmada!</h2>
-      <p className="text-gray-500 mt-2">Tu orden <span className="font-mono font-bold">{orderId.slice(0,8)}</span> está en camino 💌</p>
-      <button onClick={() => nav('/catalogo')} className="mt-6 bg-gradient-to-r from-rosa-pastel to-lila text-white px-8 py-3 rounded-full">Seguir comprando</button>
+      <p className="text-6xl">🎉</p>
+      <h2 className="font-script text-3xl text-morado-oscuro mt-4">¡Compra confirmada!</h2>
+      <p className="text-gray-500 mt-2">
+        Tu orden <span className="font-mono font-bold">{orderId.slice(0, 8)}</span> está en camino 💌
+      </p>
+      <p className="text-xs text-gray-400 mt-1">
+        Guarda este ID para hacer seguimiento de tu pedido.
+      </p>
+      <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
+        <button onClick={() => nav('/catalogo')} className="bg-gradient-to-r from-rosa-pastel to-lila text-white px-8 py-3 rounded-full font-semibold">
+          Seguir comprando
+        </button>
+        <Link
+          to={`/tracking`}
+          className="border border-pink-200 text-morado-oscuro px-8 py-3 rounded-full font-semibold hover:bg-lavanda-blush transition"
+        >
+          📦 Hacer seguimiento
+        </Link>
+      </div>
     </div>
   );
 

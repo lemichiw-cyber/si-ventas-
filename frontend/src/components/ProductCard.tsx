@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useCart } from '../store/useCart';
 import api from '../lib/api';
+import FallbackImg from './FallbackImg';
 
 export default function ProductCard({ p, index = 0 }: { p: any; index?: number }) {
   const add = useCart(s => s.addItem);
@@ -20,7 +21,7 @@ export default function ProductCard({ p, index = 0 }: { p: any; index?: number }
       className="bg-white rounded-[24px] shadow-soft overflow-hidden border border-pink-50 flex flex-col"
     >
       <div className="relative">
-        <img src={p.imagenPrincipal || 'https://via.placeholder.com/400'} alt={p.nombre} loading="lazy" className="w-full h-52 object-cover" />
+        <FallbackImg src={p.imagenPrincipal || '/src/assets/fallback-product.svg'} alt={p.nombre} className="w-full h-52 object-cover" loading="lazy" />
         {p.esNovedad && <span className="absolute top-3 left-3 bg-gradient-to-r from-rosa-pastel to-lila text-white text-xs font-bold px-3 py-1 rounded-full shadow">¡Nuevo! ✨</span>}
         {p.esRecomendado && !p.esNovedad && <span className="absolute top-3 left-3 bg-dorado text-morado-oscuro text-xs font-bold px-3 py-1 rounded-full">★ Recomendado</span>}
         <span className="absolute top-3 right-3 bg-white/90 backdrop-blur text-morado-oscuro text-xs px-2 py-1 rounded-full">{p.categoria?.nombre || ''}</span>

@@ -8,6 +8,7 @@ import Checkout from './pages/Checkout';
 import { Login, Register } from './pages/Auth';
 import Admin from './pages/Admin';
 import Novedades from './pages/Novedades';
+import OrderTracking from './pages/OrderTracking';
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Register />} />
           <Route path="/novedades" element={<Novedades />} />
+          <Route path="/tracking" element={<OrderTracking />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<div className="p-12 text-center">404 - No encontrado 🥺</div>} />
         </Routes>

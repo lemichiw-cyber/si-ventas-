@@ -1,15 +1,33 @@
 {
   "info": { "name": "Dulce Encanto API", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json" },
-  "variable": [{ "key": "baseUrl", "value": "http://localhost:4000/api" }, { "key": "token", "value": "" }],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000/api" },
+    { "key": "token", "value": "" }
+  ],
   "item": [
     { "name": "Health", "request": { "method": "GET", "url": "{{baseUrl}}/health" } },
-    { "name": "Register", "request": { "method": "POST", "url": "{{baseUrl}}/auth/register", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"email\":\"test@test.com\",\"password\":\"Test123!\",\"nombre\":\"Test\",\"apellido\":\"User\"}" } } },
+    { "name": "Register", "request": { "method": "POST", "url": "{{baseUrl}}/auth/register", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"email\":\"test@test.com\",\"password\":\"Test123!\",\"nombre\":\"Test\",\"apellido\":\"User\",\"telefono\":\"555-1234\",\"direccion\":\"Calle Falsa 123\"}" } } },
     { "name": "Login", "request": { "method": "POST", "url": "{{baseUrl}}/auth/login", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"email\":\"cliente@test.com\",\"password\":\"Cliente123!\"}" } } },
+    { "name": "Refresh Token", "request": { "method": "POST", "url": "{{baseUrl}}/auth/refresh", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"refreshToken\":\"{{token}}\"}" } } },
     { "name": "Get Products", "request": { "method": "GET", "url": "{{baseUrl}}/products?limit=12" } },
+    { "name": "Get Products by Category", "request": { "method": "GET", "url": "{{baseUrl}}/products?categoria=fresa" } },
+    { "name": "Filter Products", "request": { "method": "GET", "url": "{{baseUrl}}/products?precio_min=2&precio_max=3&sort=precio_asc&search=fresa" } },
     { "name": "Get Product by Slug", "request": { "method": "GET", "url": "{{baseUrl}}/products/mermelada-fresa-artesanal" } },
     { "name": "Get Nutrition", "request": { "method": "GET", "url": "{{baseUrl}}/products/mermelada-fresa-artesanal/nutrition" } },
-    { "name": "Cart - Add", "request": { "method": "POST", "url": "{{baseUrl}}/cart/items", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"productId\":\"<id>\",\"cantidad\":2}" } } },
+    { "name": "Get Reviews", "request": { "method": "GET", "url": "{{baseUrl}}/products/mermelada-fresa-artesanal/reviews" } },
+    { "name": "Cart - Get", "request": { "method": "GET", "url": "{{baseUrl}}/cart", "header": [{ "key": "X-Session-Id", "value": "test-session-123" }] } },
+    { "name": "Cart - Add Item", "request": { "method": "POST", "url": "{{baseUrl}}/cart/items", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"productId\":\"<id>\",\"cantidad\":2,\"sessionId\":\"test-session-123\"}" } } },
+    { "name": "Cart - Update Item", "request": { "method": "PUT", "url": "{{baseUrl}}/cart/items/<productId>", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"cantidad\":3,\"sessionId\":\"test-session-123\"}" } } },
+    { "name": "Cart - Remove Item", "request": { "method": "DELETE", "url": "{{baseUrl}}/cart/items/<productId>?sessionId=test-session-123" } },
     { "name": "Create Order", "request": { "method": "POST", "url": "{{baseUrl}}/orders", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{\"items\":[{\"productId\":\"<id>\",\"cantidad\":1}],\"direccionEnvio\":\"Calle Falsa 123\",\"metodoPago\":\"mock\"}" } } },
-    { "name": "Create Review", "request": { "method": "POST", "url": "{{baseUrl}}/reviews", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{\"productId\":\"<id>\",\"rating\":5,\"comentario\":\"Deliciosa!\"}" } } }
+    { "name": "Get Orders (mine)", "request": { "method": "GET", "url": "{{baseUrl}}/orders", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
+    { "name": "Get Order by ID", "request": { "method": "GET", "url": "{{baseUrl}}/orders/<orderId>", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
+    { "name": "Update Order Status", "request": { "method": "PUT", "url": "{{baseUrl}}/orders/<orderId>/status", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{\"estado\":\"enviado\",\"trackingNumber\":\"FEDEX123456789MX\",\"trackingCarrier\":\"FedEx\"}" } } },
+    { "name": "Update Tracking Number", "request": { "method": "PUT", "url": "{{baseUrl}}/orders/<orderId>/tracking", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{\"trackingNumber\":\"FEDEX123456789MX\",\"trackingCarrier\":\"FedEx\"}" } } },
+    { "name": "Public Order Tracking", "request": { "method": "GET", "url": "{{baseUrl}}/orders/<orderId>/tracking" } },
+    { "name": "Create Review", "request": { "method": "POST", "url": "{{baseUrl}}/reviews", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{\"productId\":\"<id>\",\"rating\":5,\"comentario\":\"Deliciosa!\"}" } } },
+    { "name": "Get My Profile", "request": { "method": "GET", "url": "{{baseUrl}}/auth/me", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }] } },
+    { "name": "Update Profile", "request": { "method": "PUT", "url": "{{baseUrl}}/auth/me", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "body": { "mode": "raw", "raw": "{\"nombre\":\"Sakura\",\"apellido\":\"Mora\",\"telefono\":\"555-9999\",\"direccion\":\"Av. Dulce 456\"}" } } },
+    { "name": "Forgot Password", "request": { "method": "POST", "url": "{{baseUrl}}/auth/forgot-password", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"email\":\"cliente@test.com\"}" } } }
   ]
 }

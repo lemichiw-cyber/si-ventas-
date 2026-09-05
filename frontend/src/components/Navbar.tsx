@@ -19,6 +19,7 @@ export default function Navbar() {
           <Link to="/" className="hover:text-rosa-pastel transition">Inicio</Link>
           <Link to="/catalogo" className="hover:text-rosa-pastel transition">Catálogo</Link>
           <Link to="/novedades" className="hover:text-rosa-pastel transition">Novedades</Link>
+          <Link to="/tracking" className="hover:text-rosa-pastel transition">📦 Seguimiento</Link>
         </div>
         <div className="flex items-center gap-3">
           <Link to="/carrito" className="relative bg-gradient-to-r from-rosa-pastel to-lila text-white px-4 py-2 rounded-full font-semibold shadow-pink hover:scale-105 transition">

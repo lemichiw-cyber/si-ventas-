@@ -3,11 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = env("DATABASE_PROVIDER", "sqlite")
   url      = env("DATABASE_URL")
-  // Para producción PostgreSQL, cambia a:
-  // provider = "postgresql"
-  // url      = env("DATABASE_URL")
+  // Para producción PostgreSQL/Supabase, cambia la variable de entorno:
+  //   provider = "postgresql"
+  //   DATABASE_PROVIDER="postgresql"
+  //   DATABASE_URL="postgresql://postgres:tu_password@db.xxx.supabase.co:5432/postgres"
 }
 
 model User {
@@ -90,7 +91,12 @@ model Order {
   total           Float
   direccionEnvio  String?     @map("direccion_envio") // encriptada
   metodoPago      String?     @map("metodo_pago")
+  trackingNumber  String?     @map("tracking_number") // número de guía/envío
+  trackingCarrier String?     @map("tracking_carrier") // carrier (ej: Fedex, DHL, Correos)
+  shippedAt       DateTime?   @map("shipped_at") // fecha de envío
+  deliveredAt     DateTime?   @map("delivered_at") // fecha de entrega
   createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
   items           OrderItem[]
 
   @@map("orders")

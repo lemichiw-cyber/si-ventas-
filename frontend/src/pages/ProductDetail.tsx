@@ -1,9 +1,10 @@
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../lib/api';
 import { useCart } from '../store/useCart';
 import { useState } from 'react';
 import ProductCard from '../components/ProductCard';
+import FallbackImg from '../components/FallbackImg';
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -27,9 +28,9 @@ export default function ProductDetail() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="grid md:grid-cols-2 gap-8 bg-white rounded-[32px] p-6 shadow-soft border border-pink-50">
         <div>
-          <img src={p.imagenPrincipal} alt={p.nombre} className="w-full h-[420px] object-cover rounded-[24px] hover:scale-[1.02] transition" />
+          <FallbackImg src={p.imagenPrincipal || '/src/assets/fallback-product.svg'} alt={p.nombre} className="w-full h-[420px] object-cover rounded-[24px] hover:scale-[1.02] transition" loading="eager" />
           <div className="flex gap-2 mt-3">
-            {(p.imagenesGaleria || []).slice(0, 3).map((img: string, i: number) => <img key={i} src={img} alt="" className="w-20 h-20 object-cover rounded-xl border border-pink-50" />)}
+            {(p.imagenesGaleria || []).slice(0, 3).map((img: string, i: number) => <FallbackImg key={i} src={img || '/src/assets/fallback-product.svg'} alt={`Galería ${i + 1}`} className="w-20 h-20 object-cover rounded-xl border border-pink-50" loading="lazy" />)}
           </div>
         </div>
         <div>
