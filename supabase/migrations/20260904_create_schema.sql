@@ -14,8 +14,8 @@ create table if not exists "categories" (
   "imagenUrl" text,
   "descripcion" text,
   "colorAcento" text,
-  "createdAt"   timestamp(3) default now(),
-  "updatedAt"   timestamp(3) default now()
+  "createdAt"   timestamp(3) default CURRENT_TIMESTAMP,
+  "updatedAt"   timestamp(3) default CURRENT_TIMESTAMP
 );
 
 -- ── Tabla: usuarios
@@ -25,11 +25,11 @@ create table if not exists "users" (
   "passwordHash" text   not null,
   "nombre"       text    not null,
   "apellido"     text    not null,
-  "telefono"     text, -- encriptado AES-256
-  "direccion"    text, -- encriptado AES-256
+  "telefono"     text,
+  "direccion"    text,
   "rol"          text    default 'cliente',
-  "createdAt"    timestamp(3) default now(),
-  "updatedAt"    timestamp(3) default now()
+  "createdAt"    timestamp(3) default CURRENT_TIMESTAMP,
+  "updatedAt"    timestamp(3) default CURRENT_TIMESTAMP
 );
 
 -- ── Tabla: productos
@@ -43,14 +43,14 @@ create table if not exists "products" (
   "stock"           integer default 100,
   "categoriaId"     uuid    references "categories" ("id"),
   "imagenPrincipal" text,
-  "imagenesGaleria" text, -- JSON array
+  "imagenesGaleria" text,
   "pesoNeto"        text,
-  "ingredientes"    text, -- JSON array
-  "beneficios"      text, -- JSON array
+  "ingredientes"    text,
+  "beneficios"      text,
   "esNovedad"       boolean default false,
   "esRecomendado"   boolean default false,
-  "createdAt"       timestamp(3) default now(),
-  "updatedAt"       timestamp(3) default now()
+  "createdAt"       timestamp(3) default CURRENT_TIMESTAMP,
+  "updatedAt"       timestamp(3) default CURRENT_TIMESTAMP
 );
 
 -- Índices para productos
@@ -72,7 +72,7 @@ create table if not exists "nutrition_facts" (
   "sodio"          numeric not null,
   "fibra"          numeric not null,
   "porcentajeFruta" integer not null,
-  "createdAt"       timestamp(3) default now()
+  "createdAt"       timestamp(3) default CURRENT_TIMESTAMP
 );
 
 -- ── Tabla: órdenes
@@ -81,14 +81,14 @@ create table if not exists "orders" (
   "userId"         uuid    references "users" ("id"),
   "estado"         text    default 'pendiente',
   "total"          numeric not null,
-  "direccionEnvio" text, -- encriptado AES-256
+  "direccionEnvio" text,
   "metodoPago"     text,
-  "trackingNumber" text, -- encriptado AES-256
+  "trackingNumber" text,
   "trackingCarrier" text,
   "shippedAt"      timestamp(3),
   "deliveredAt"    timestamp(3),
-  "createdAt"      timestamp(3) default now(),
-  "updatedAt"      timestamp(3) default now()
+  "createdAt"      timestamp(3) default CURRENT_TIMESTAMP,
+  "updatedAt"      timestamp(3) default CURRENT_TIMESTAMP
 );
 
 create index if not exists idx_orders_user on "orders" ("userId");
@@ -113,7 +113,7 @@ create table if not exists "reviews" (
   "userId"      uuid    references "users" ("id"),
   "rating"      integer not null check ("rating" >= 1 and "rating" <= 5),
   "comentario"  text,
-  "createdAt"   timestamp(3) default now(),
+  "createdAt"   timestamp(3) default CURRENT_TIMESTAMP,
   unique ("productId", "userId")
 );
 
@@ -124,7 +124,7 @@ create table if not exists "cart_sessions" (
   id          uuid    primary key default uuid_generate_v4(),
   "sessionId"  text,
   "userId"      uuid    references "users" ("id"),
-  "items"       text    not null, -- JSON string
+  "items"       text    not null,
   "expiresAt"   timestamp(3) not null
 );
 
@@ -132,14 +132,10 @@ create index if not exists idx_cart_sessions_session on "cart_sessions" ("sessio
 create index if not exists idx_cart_sessions_user on "cart_sessions" ("userId");
 
 -- ── Row Level Security (RLS) para Supabase
--- Activa RLS en tablas sensibles
 alter table "users" enable row level security;
 alter table "orders" enable row level security;
 alter table "cart_sessions" enable row level security;
 
--- Políticas de seguridad
--- Nota: estas políticas son placeholder; ajusta según tu lógica de negocio.
--- El backend maneja la autorización vía JWT, pero RLS añade defensa en profundidad.
 create policy "Usuarios pueden ver su propio perfil" on "users"
   for select using (auth.uid()::text = id::text);
 
@@ -150,7 +146,7 @@ create policy "Usuarios pueden crear su propio perfil" on "users"
 create or replace function update_updated_at()
 returns trigger as $$
 begin
-  new."updatedAt" = now();
+  new."updatedAt" = CURRENT_TIMESTAMP;
   return new;
 end;
 $$ language 'plpgsql';
