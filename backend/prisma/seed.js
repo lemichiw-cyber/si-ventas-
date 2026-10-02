@@ -14,11 +14,11 @@ async function main() {
     await prisma.user.deleteMany();
     await prisma.cartSession.deleteMany();
     const categories = await Promise.all([
-        prisma.category.create({ data: { nombre: 'Fresa', slug: 'fresa', imagenUrl: 'https://images.unsplash.com/photo-1543528171-ed40a2604160?w=400', descripcion: 'Mermeladas de fresa fresca', colorAcento: '#FF6B8A' } }),
+        prisma.category.create({ data: { nombre: 'Fresa', slug: 'fresa', imagenUrl: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=400', descripcion: 'Mermeladas de fresa fresca', colorAcento: '#FF6B8A' } }),
         prisma.category.create({ data: { nombre: 'Mora', slug: 'mora', imagenUrl: 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc?w=400', descripcion: 'Mermelada de mora silvestre', colorAcento: '#9370DB' } }),
         prisma.category.create({ data: { nombre: 'Durazno', slug: 'durazno', imagenUrl: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400', descripcion: 'Dulce durazno de temporada', colorAcento: '#FFDAB9' } }),
         prisma.category.create({ data: { nombre: 'Zarzamora', slug: 'zarzamora', imagenUrl: 'https://images.unsplash.com/photo-1516594798947-e65505dbb29d?w=400', descripcion: 'Zarzamora intensa y artesanal', colorAcento: '#800080' } }),
-        prisma.category.create({ data: { nombre: 'Mixtas', slug: 'mixtas', imagenUrl: 'https://images.unsplash.com/photo-1474440690486-0a34d1d3656c?w=400', descripcion: 'Combinaciones frutales únicas', colorAcento: '#FFB6C1' } }),
+        prisma.category.create({ data: { nombre: 'Mixtas', slug: 'mixtas', imagenUrl: 'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?w=400', descripcion: 'Combinaciones frutales únicas', colorAcento: '#FFB6C1' } }),
     ]);
     const catMap = {};
     categories.forEach(c => catMap[c.slug] = c.id);
@@ -31,7 +31,7 @@ async function main() {
             pesoNeto: '250g', ingredientes: ['Fresa fresca', 'Azúcar', 'Limón'], beneficios: ['Sin conservadores', '100% fruta natural', 'Hecha con amor'],
             esNovedad: false, esRecomendado: true,
             imagenPrincipal: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=600',
-            imagenesGaleria: ['https://images.unsplash.com/photo-1543528171-ed40a2604160?w=600'],
+            imagenesGaleria: ['https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=600'],
             nutrition: { porcion: '20g', calorias: 45, proteinas: 0.1, grasas: 0, carbohidratos: 11, azucares: 10, sodio: 1, fibra: 0.3, porcentajeFruta: 65 },
         },
         {
@@ -71,7 +71,7 @@ async function main() {
             precio: 3.0, costoProduccion: 2.1, stock: 45, categoriaId: catMap['mixtas'],
             pesoNeto: '250g', ingredientes: ['Fresa', 'Mora', 'Azúcar', 'Limón'], beneficios: ['Edición limitada', 'Mix frutal', 'Sin conservadores'],
             esNovedad: true, esRecomendado: true,
-            imagenPrincipal: 'https://images.unsplash.com/photo-1474440690486-0a34d1d3656c?w=600',
+            imagenPrincipal: 'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?w=600',
             nutrition: { porcion: '20g', calorias: 47, proteinas: 0.15, grasas: 0, carbohidratos: 11.3, azucares: 10, sodio: 1, fibra: 0.4, porcentajeFruta: 66 },
         },
     ];

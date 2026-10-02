@@ -218,7 +218,7 @@ export default function Admin() {
         {products.data?.data?.slice(0, 8).map((p: any) => (
           <div key={p.id} className="bg-white rounded-[20px] p-3 shadow-soft border border-pink-50">
             <FallbackImg
-              src={p.imagenPrincipal || '/src/assets/fallback-product.svg'}
+              src={p.imagenPrincipal || ''}
               alt={p.nombre}
               className="w-full h-24 object-cover rounded-xl"
               loading="lazy"

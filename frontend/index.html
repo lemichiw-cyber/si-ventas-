@@ -17,7 +17,8 @@
       property="og:description"
       content="Mermeladas artesanales sin conservadores. Pura fruta fresca en cada cucharada. Envío gratis y entrega rápida. ¡Hecho con amor! 🍓"
     />
-    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:image" content="https://lemichiw-cyber.github.io/si-ventas-/og-image.png" />
+    <meta property="og:image:secure_url" content="https://lemichiw-cyber.github.io/si-ventas-/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:url" content="https://lemichiw-cyber.github.io/si-ventas-/" />
@@ -31,7 +32,7 @@
       name="twitter:description"
       content="Mermeladas artesanales sin conservadores. Pura fruta fresca en cada cucharada. Envío gratis y entrega rápida."
     />
-    <meta name="twitter:image" content="/og-image.png" />
+    <meta name="twitter:image" content="https://lemichiw-cyber.github.io/si-ventas-/og-image.png" />
 
     <!-- Favicons -->
     <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -52,50 +53,67 @@
     <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "Dulce Encanto",
-  "url": "https://lemichiw-cyber.github.io/si-ventas-/",
-  "logo": "https://lemichiw-cyber.github.io/si-ventas-/favicon-192.png",
-  "sameAs": [],
-  "contactPoint": [
+  "@graph": [
     {
-      "@type": "ContactPoint",
-      "telephone": "+52-1-555-DULCE",
-      "contactType": "customer service",
-      "areaServed": "MX",
-      "availableLanguage": ["es", "en"]
+      "@type": "Organization",
+      "@id": "https://lemichiw-cyber.github.io/si-ventas-/#organization",
+      "name": "Dulce Encanto",
+      "url": "https://lemichiw-cyber.github.io/si-ventas-/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://lemichiw-cyber.github.io/si-ventas-/favicon-192.png",
+        "width": 192,
+        "height": 192
+      },
+      "image": "https://lemichiw-cyber.github.io/si-ventas-/og-image.png",
+      "sameAs": [],
+      "contactPoint": [
+        {
+          "@type": "ContactPoint",
+          "telephone": "+52-1-555-DULCE",
+          "contactType": "customer service",
+          "areaServed": "MX",
+          "availableLanguage": ["es", "en"]
+        }
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://lemichiw-cyber.github.io/si-ventas-/#website",
+      "name": "Dulce Encanto - Mermeladas Artesanales",
+      "url": "https://lemichiw-cyber.github.io/si-ventas-/",
+      "image": "https://lemichiw-cyber.github.io/si-ventas-/og-image.png",
+      "publisher": { "@id": "https://lemichiw-cyber.github.io/si-ventas-/#organization" },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://lemichiw-cyber.github.io/si-ventas-/catalogo?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": "Product",
+      "@id": "https://lemichiw-cyber.github.io/si-ventas-/#product-fresa",
+      "name": "Mermelada de Fresa Artesanal",
+      "image": [
+        "https://images.unsplash.com/photo-1700166581152-5489eb689333?w=600&q=80",
+        "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=600&q=80"
+      ],
+      "description": "Una explosión de sabor natural en cada cucharada. Hecha con fresas frescas seleccionadas, azúcar y un toque de limón.",
+      "brand": { "@type": "Brand", "name": "Dulce Encanto" },
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "MXN",
+        "price": "2.50",
+        "availability": "https://schema.org/InStock",
+        "url": "https://lemichiw-cyber.github.io/si-ventas-/catalogo"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "reviewCount": "152"
+      }
     }
   ]
-}
-{
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "Dulce Encanto - Mermeladas Artesanales",
-  "url": "https://lemichiw-cyber.github.io/si-ventas-/",
-  "potentialAction": {
-    "@type": "SearchAction",
-    "target": "https://lemichiw-cyber.github.io/si-ventas-/catalogo?search={search_term_string}",
-    "query-input": "required name=search_term_string"
-  }
-}
-{
-  "@context": "https://schema.org",
-  "@type": "Product",
-  "name": "Mermelada de Fresa Artesanal",
-  "image": "https://images.unsplash.com/photo-1700166581152-5489eb689333?w=600&q=80",
-  "description": "Una explosión de sabor natural en cada cucharada. Hecha con fresas frescas seleccionadas, azúcar y un toque de limón.",
-  "offers": {
-    "@type": " Offer",
-    "priceCurrency": "USD",
-    "price": "2.50",
-    "availability": "https://schema.org/InStock",
-    "url": "https://lemichiw-cyber.github.io/si-ventas-/catalogo"
-  },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.9",
-    "reviewCount": "152"
-  }
 }
     </script>
   </head>

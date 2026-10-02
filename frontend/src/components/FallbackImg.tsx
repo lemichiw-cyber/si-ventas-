@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import fallbackProduct from '../assets/fallback-product.svg';
 
 interface FallbackImgProps {
   src: string;
@@ -12,12 +13,12 @@ interface FallbackImgProps {
  * Replaces broken `via.placeholder.com` URLs throughout the app.
  */
 export default function FallbackImg({ src, alt, className, loading = 'lazy' }: FallbackImgProps) {
-  const [imgSrc, setImgSrc] = useState(src);
+  const [imgSrc, setImgSrc] = useState(src || fallbackProduct);
   const [hasError, setHasError] = useState(false);
 
   const handleError = () => {
-    if (!hasError && src !== '/src/assets/fallback-product.svg') {
-      setImgSrc('/src/assets/fallback-product.svg');
+    if (!hasError && imgSrc !== fallbackProduct) {
+      setImgSrc(fallbackProduct);
       setHasError(true);
     }
   };
