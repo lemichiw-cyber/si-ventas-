@@ -17,3 +17,5 @@ backend/prisma/dev.db*
 
 # Logs
 npm-debug.log*
+# Respaldos locales de base de datos
+backend/backups/
