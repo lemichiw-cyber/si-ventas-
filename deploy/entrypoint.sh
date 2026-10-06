@@ -14,17 +14,20 @@ export DATABASE_URL="${DATABASE_URL:-file:/data/dulce.dev.db}"
 
 echo "→ Conexión a base de datos configurada"
 
+# Debe coincidir con el schema usado en `prisma generate` (ver Dockerfile).
+PRISMA_SCHEMA="${PRISMA_SCHEMA:-prisma/schema.supabase.prisma}"
+
 # Si DATABASE_URL apunta a PostgreSQL, aplicar schema
 case "$DATABASE_URL" in
   postgresql://*|postgres://*)
-    echo "→ Usando PostgreSQL (Supabase)"
+    echo "→ Usando PostgreSQL con schema $PRISMA_SCHEMA"
     echo "→ Aplicando schema con Prisma db push..."
-    npx prisma db push --accept-data-loss --skip-generate
+    npx prisma db push --schema="$PRISMA_SCHEMA" --accept-data-loss --skip-generate
     ;;
   *)
     echo "→ Usando SQLite"
     echo "→ Aplicando esquema con Prisma db push..."
-    npx prisma db push --skip-generate
+    npx prisma db push --schema="$PRISMA_SCHEMA" --skip-generate
     ;;
 esac
 

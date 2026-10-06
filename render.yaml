@@ -1,6 +1,17 @@
 # ─────────────────────────────────────────────────────
 # Render Blueprint — despliegue con un solo Web Service.
 # Usa el Dockerfile raíz: nginx (frontend) + API en un contenedor.
+#
+# ── PLAN FREE: por qué la BD NO está en Render ──
+# Los discos persistentes de Render solo existen en plan pago. Con
+# `plan: free` no hay disco, así que un `file:/data/dulce.dev.db`
+# sería efímero: TODOS los datos (productos, pedidos, usuarios) se
+# perderían en cada redespliegue. Por eso la base de datos vive en
+# Supabase Postgres (gratis) y Render solo corre la app.
+#
+# Las variables marcadas `sync: false` NO se guardan aquí (el repo
+# es público). Render te las pide una vez al crear el servicio y las
+# guarda cifradas. Después se editan en Dashboard → Environment.
 # ─────────────────────────────────────────────────────
 services:
   - type: web
@@ -11,43 +22,51 @@ services:
     dockerContext: .
     healthCheckPath: /api/health
     autoDeploy: true
-    disk:
-      name: data
-      mountPath: /data
-      sizeGB: 1
+    # SIN disco: no existe en plan free (ver nota arriba).
     envVars:
       - key: NODE_ENV
         value: production
-      # ── SQLite (default) ──
-      # Para usar SQLite localmente o en Render con disco persistente
+
+      # ── Base de datos: Supabase Postgres (gratis) ──
+      # sync:false -> Render te lo pide. Pégale el DATABASE_URL de tu
+      # .env local (Supabase → Project Settings → Database → Connection
+      # string → "Session pooler"). Usa el pooler, no el directo.
+      #
+      # OJO: el Dockerfile hornea el cliente Prisma en build time, asi
+      # que despues de cambiar DATABASE_URL hay que redesplegar con
+      # "Clear build cache" para que el schema siga coincidiendo.
       - key: DATABASE_URL
-        value: file:/data/dulce.dev.db
-      # ── Supabase (PostgreSQL) ──
-      # Para usar Supabase, comenta DATABASE_URL de arriba y descomenta esto:
-      # - key: DATABASE_URL
-      #   value: "postgresql://postgres:[PASSWORD]@db.jzetdfegilsdphbfusmm.supabase.co:5432/postgres?sslmode=require"
-      # - key: DATABASE_PROVIDER
-      #   value: postgresql
-      # ── Supabase API (para notificaciones) ──
+        sync: false
+      - key: PRISMA_SCHEMA
+        value: prisma/schema.supabase.prisma
+
+      # ── Supabase API (solo para el aviso de tracking por email) ──
       - key: SUPABASE_URL
-        value: https://jzetdfegilsdphbfusmm.supabase.co
-      # - key: SUPABASE_SERVICE_ROLE_KEY
-      #   value: <obten tu service_role key de: supabase.com → Project Settings → API → service_role>
-      # - key: SUPABASE_ANON_KEY
-      #   value: sb_publishable_C3L7H7yEH3NXnnFlPJekuQ_R9Ngdzli
-      # - key: SUPABASE_PROJECT_REF
-      #   value: jzetdfegilsdphbfusmm
+        value: https://kuawpxftekubddwctaaw.supabase.co
+      - key: SUPABASE_PROJECT_REF
+        value: kuawpxftekubddwctaaw
+      # sync:false -> opcional. Sin esto la app arranca igual y solo se
+      # omite el email de tracking (ver backend/src/utils/supabase.ts).
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+
       # ── JWT & Encryption ──
+      # generateValue:false + sync:false a proposito: si la AES_KEY se
+      # regenerara sola, los telefonos y direcciones ya encriptados de
+      # la base de datos quedarian ilegibles para siempre.
       - key: JWT_ACCESS_SECRET
-        generateValue: true
+        sync: false
       - key: JWT_REFRESH_SECRET
-        generateValue: true
+        sync: false
       - key: AES_KEY
-        generateValue: true
+        sync: false
       - key: AES_KEY_PREVIOUS
         value: ""
+
       # ── Misc ──
       - key: BCRYPT_ROUNDS
         value: "12"
+      # Origenes permitidos por CORS, separados por coma.
+      # El front de Pages llama a la API de Render (CORS real).
       - key: FRONTEND_URL
         value: https://dulce-encanto.onrender.com,https://lemichiw-cyber.github.io,http://localhost:5173

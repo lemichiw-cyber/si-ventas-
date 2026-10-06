@@ -12,7 +12,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssl \
 COPY backend/package.json ./
 COPY backend/tsconfig.json backend/tsconfig.seed.json ./
 COPY backend/prisma ./prisma
-RUN npm install && npx prisma generate
+# El cliente Prisma se hornea en tiempo de build segun el schema.
+# Por defecto Postgres/Supabase (plan free de Render no tiene disco, asi que
+# SQLite seria efimero y perderiamos los datos en cada redespliegue).
+# Para SQLite local: docker build --build-arg PRISMA_SCHEMA=prisma/schema.prisma .
+ARG PRISMA_SCHEMA=prisma/schema.supabase.prisma
+RUN npm install && npx prisma generate --schema=$PRISMA_SCHEMA
 COPY backend/src ./src
 RUN npm run build && npx tsc -p tsconfig.seed.json
 
