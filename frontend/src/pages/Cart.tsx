@@ -22,7 +22,7 @@ export default function Cart() {
         <div className="md:col-span-2 space-y-3">
           {items.map(i => (
             <div key={i.product_id} className="bg-white rounded-[20px] p-4 flex gap-4 shadow-soft border border-pink-50">
-              <FallbackImg src={i.imagen || '/src/assets/fallback-product.svg'} alt={i.nombre || 'Producto'} className="w-20 h-20 rounded-xl object-cover" loading="lazy" />
+              <FallbackImg src={i.imagen || ''} alt={i.nombre || 'Producto'} className="w-20 h-20 rounded-xl object-cover" loading="lazy" />
               <div className="flex-1">
                 <p className="font-medium text-morado-oscuro">{i.nombre || i.product_id.slice(0,8)}</p>
                 <p className="text-sm text-gray-400">${i.precio_snapshot.toFixed(2)} c/u</p>

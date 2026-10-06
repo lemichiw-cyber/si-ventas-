@@ -16,7 +16,7 @@ export default function Home() {
   });
 
   const trustBar = [
-    { icon: '🚚', title: 'Envío Gratis', desc: 'A partir de $500 MXN' },
+    { icon: '🚚', title: 'Envío Gratis', desc: 'A partir de $25 USD' },
     { icon: '⚡', title: 'Entrega Rápida', desc: '24-48h hábiles' },
     { icon: '🌿', title: '100% Natural', desc: 'Sin conservadores' },
     { icon: '🔒', title: 'Pago Seguro', desc: 'AES-256 encriptado' },
@@ -41,7 +41,7 @@ export default function Home() {
   const faqs = [
     {
       q: '¿Cuánto tarda el envío?',
-      a: 'En pedidos dentro de la CDMX y zonas metropolitanas, la entrega es de 24-48 horas hábiles. En el resto del país, 3-5 días hábiles.',
+      a: 'En pedidos dentro de San Salvador y zonas metropolitanas, la entrega es de 24-48 horas hábiles. En el resto del país, 2-4 días hábiles.',
     },
     {
       q: '¿Son realmente sin conservadores?',
@@ -307,7 +307,7 @@ export default function Home() {
 
       {/* Floating WhatsApp Chat */}
       <motion.a
-        href="https://wa.me/5215551234567?text=Quiero%20pedir%20mermeladas%20de%20Dulce%20Encanto%20🍓"
+        href="https://wa.me/50370123456?text=Quiero%20pedir%20mermeladas%20de%20Dulce%20Encanto%20🍓"
         target="_blank"
         rel="noopener noreferrer"
         initial={{ scale: 0 }}

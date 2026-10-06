@@ -20,7 +20,7 @@ async function main() {
       data: {
         nombre: 'Fresa',
         slug: 'fresa',
-        imagenUrl: 'https://images.unsplash.com/photo-1543528171-ed40a2604160?w=400',
+        imagenUrl: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=400',
         descripcion: 'Mermeladas de fresa fresca',
         colorAcento: '#FF6B8A',
       },
@@ -56,7 +56,7 @@ async function main() {
       data: {
         nombre: 'Mixtas',
         slug: 'mixtas',
-        imagenUrl: 'https://images.unsplash.com/photo-1474440690486-0a34d1d3656c?w=400',
+        imagenUrl: 'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?w=400',
         descripcion: 'Combinaciones frutales únicas',
         colorAcento: '#FFB6C1',
       },
@@ -66,7 +66,7 @@ async function main() {
       data: {
         nombre: 'Mango',
         slug: 'mango',
-        imagenUrl: 'https://images.unsplash.com/photo-1553028201-fe492f20a457?w=400',
+        imagenUrl: 'https://images.unsplash.com/photo-1509365465985-25d11c17e812?w=400',
         descripcion: 'Mermelada de mango tropical',
         colorAcento: '#FFB347',
       },
@@ -75,7 +75,7 @@ async function main() {
       data: {
         nombre: 'Maracuyá',
         slug: 'maracuya',
-        imagenUrl: 'https://images.unsplash.com/photo-1544441524-53531b99c1f4?w=400',
+        imagenUrl: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=400',
         descripcion: 'Mermelada de maracuyá ácida y vibrante',
         colorAcento: '#FFD580',
       },
@@ -101,7 +101,7 @@ async function main() {
       esNovedad: false,
       esRecomendado: true,
       imagenPrincipal: 'https://images.unsplash.com/photo-1700166581152-5489eb689333?w=600&q=80',
-      imagenesGaleria: ['https://images.unsplash.com/photo-1543528171-ed40a2604160?w=600'],
+      imagenesGaleria: ['https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=600&q=80'],
       nutrition: { porcion: '20g', calorias: 45, proteinas: 0.1, grasas: 0, carbohidratos: 11, azucares: 10, sodio: 1, fibra: 0.3, porcentajeFruta: 65 },
     },
     {
@@ -165,7 +165,7 @@ async function main() {
       beneficios: ['Edición limitada', 'Mix frutal', 'Sin conservadores'],
       esNovedad: true,
       esRecomendado: true,
-      imagenPrincipal: 'https://images.unsplash.com/photo-1474440690486-0a34d1d3656c?w=600',
+      imagenPrincipal: 'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?w=600',
       nutrition: { porcion: '20g', calorias: 47, proteinas: 0.15, grasas: 0, carbohidratos: 11.3, azucares: 10, sodio: 1, fibra: 0.4, porcentajeFruta: 66 },
     },
     // New products (5 additional)
@@ -182,7 +182,7 @@ async function main() {
       beneficios: ['Rico en vitamina C', '100% fruta natural', 'Sin conservadores'],
       esNovedad: true,
       esRecomendado: false,
-      imagenPrincipal: 'https://images.unsplash.com/photo-1553028201-fe492f20a457?w=600&q=80',
+      imagenPrincipal: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=600&q=80',
       nutrition: { porcion: '20g', calorias: 44, proteinas: 0.3, grasas: 0.1, carbohidratos: 10.8, azucares: 9.8, sodio: 0, fibra: 0.6, porcentajeFruta: 72 },
     },
     {
@@ -198,7 +198,7 @@ async function main() {
       beneficios: ['Alto contenido de antioxidantes', 'Edición limitada', 'Sin conservadores'],
       esNovedad: true,
       esRecomendado: true,
-      imagenPrincipal: 'https://images.unsplash.com/photo-1544441524-53531b99c1f4?w=600&q=80',
+      imagenPrincipal: 'https://images.unsplash.com/photo-1519996529931-28324d5a630e?w=600&q=80',
       nutrition: { porcion: '20g', calorias: 42, proteinas: 0.1, grasas: 0, carbohidratos: 10.5, azucares: 8.5, sodio: 1, fibra: 0.8, porcentajeFruta: 75 },
     },
     {
@@ -214,8 +214,8 @@ async function main() {
       beneficios: ['Con miel real', 'Sin refinados', 'Premium'],
       esNovedad: false,
       esRecomendado: true,
-      imagenPrincipal: 'https://images.unsplash.com/photo-1518329980540-2c7d7c0e3e9e?w=600&q=80',
-      imagenesGaleria: ['https://images.unsplash.com/photo-1543528171-ed40a2604160?w=600'],
+      imagenPrincipal: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&q=80',
+      imagenesGaleria: ['https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=600&q=80'],
       nutrition: { porcion: '20g', calorias: 48, proteinas: 0.1, grasas: 0, carbohidratos: 11.8, azucares: 10.2, sodio: 1, fibra: 0.3, porcentajeFruta: 68 },
     },
     {
@@ -231,7 +231,7 @@ async function main() {
       beneficios: ['Con menta natural', 'Sin conservadores', 'Rico en antioxidantes'],
       esNovedad: true,
       esRecomendado: false,
-      imagenPrincipal: 'https://images.unsplash.com/photo-1571524779949-1d5b7e6e6b3d?w=600&q=80',
+      imagenPrincipal: 'https://images.unsplash.com/photo-1471943311424-646960669fbc?w=600&q=80',
       nutrition: { porcion: '20g', calorias: 46, proteinas: 0.2, grasas: 0, carbohidratos: 11.2, azucares: 9.8, sodio: 0, fibra: 0.5, porcentajeFruta: 67 },
     },
     {
@@ -247,7 +247,7 @@ async function main() {
       beneficios: ['Edición especial', 'Regalo perfecto', 'Presentación premium'],
       esNovedad: false,
       esRecomendado: true,
-      imagenPrincipal: 'https://images.unsplash.com/photo-1474440690486-0a34d1d3656c?w=600&q=80',
+      imagenPrincipal: 'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?w=600&q=80',
       nutrition: { porcion: '20g x3', calorias: 47, proteinas: 0.15, grasas: 0, carbohidratos: 11.3, azucares: 10, sodio: 1, fibra: 0.4, porcentajeFruta: 66 },
     },
   ];
