@@ -31,11 +31,10 @@ jobs:
         run: npm install
         working-directory: frontend
 
-      - name: Build (API Render + base de GitHub Pages)
+      - name: Build (estático: sin API, solo GitHub Pages)
         run: npm run build
         working-directory: frontend
         env:
-          VITE_API_URL: https://dulce-encanto.onrender.com/api
           VITE_BASE: /si-ventas-/
 
       - name: SPA fallback (GitHub Pages no conoce las rutas de React Router)

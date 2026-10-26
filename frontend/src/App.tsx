@@ -1,14 +1,14 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import Home from './pages/Home';
 import Catalog from './pages/Catalog';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
-import { Login, Register } from './pages/Auth';
-import Admin from './pages/Admin';
 import Novedades from './pages/Novedades';
 import OrderTracking from './pages/OrderTracking';
+import { WHATSAPP_GENERAL } from './lib/tienda';
 
 export default function App() {
   return (
@@ -21,19 +21,28 @@ export default function App() {
           <Route path="/producto/:slug" element={<ProductDetail />} />
           <Route path="/carrito" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/registro" element={<Register />} />
           <Route path="/novedades" element={<Novedades />} />
           <Route path="/tracking" element={<OrderTracking />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="*" element={<div className="p-12 text-center">404 - No encontrado 🥺</div>} />
+          <Route
+            path="*"
+            element={
+              <div className="p-16 text-center">
+                <p className="text-6xl">🥺</p>
+                <h1 className="font-script text-3xl text-morado-oscuro mt-4">404 — Esta página se comió la mermelada</h1>
+                <div className="flex flex-wrap gap-3 justify-center mt-6">
+                  <Link to="/catalogo" className="bg-gradient-to-r from-rosa-pastel to-lila text-white px-6 py-3 rounded-full font-semibold">
+                    Ir al Catálogo
+                  </Link>
+                  <a href={WHATSAPP_GENERAL} target="_blank" rel="noopener noreferrer" className="border border-pink-200 text-morado-oscuro px-6 py-3 rounded-full font-semibold hover:bg-lavanda-blush transition">
+                    Escribir por WhatsApp 💬
+                  </a>
+                </div>
+              </div>
+            }
+          />
         </Routes>
       </main>
-      <footer className="bg-white border-t border-pink-100 mt-12 py-8 text-center text-sm text-gray-500">
-        <p className="font-script text-lg text-morado-oscuro">Dulce Encanto 👑🍓</p>
-        <p className="mt-1">Una explosión de sabor natural en cada cucharada. ¡Hechas con amor y fruta fresca!</p>
-        <p className="mt-2 text-xs">© 2026 Dulce Encanto - Mermeladas Artesanales. Hecho con 💖</p>
-      </footer>
+      <Footer />
     </BrowserRouter>
   );
 }

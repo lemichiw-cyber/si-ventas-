@@ -1,186 +1,149 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import api from '../lib/api';
-import { useAuth } from '../store/useAuth';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ESTADOS, buscarPedido, pedidosRecientes, enlacePedidoWhatsApp, type Pedido } from '../lib/pedidos';
+import { WHATSAPP_GENERAL, CONTACTO } from '../lib/tienda';
 
-const statusSteps = [
-  { key: 'pagado', label: 'Pedido Confirmado' },
+const PASOS = [
+  { key: 'recibido', label: 'Pedido recibido' },
+  { key: 'preparando', label: 'En preparación' },
   { key: 'enviado', label: 'Enviado' },
   { key: 'entregado', label: 'Entregado' },
 ];
 
-const statusColors: Record<string, string> = {
-  pagado: 'bg-rosa-pastel',
-  enviado: 'bg-lila',
-  entregado: 'bg-green-400',
-  cancelado: 'bg-red-400',
-  pendiente: 'bg-gray-300',
-};
-
 export default function OrderTracking() {
-  const { user } = useAuth();
   const [orderId, setOrderId] = useState('');
-  const [searchedId, setSearchedId] = useState('');
+  const [buscado, setBuscado] = useState('');
+  const [pedido, setPedido] = useState<Pedido | null>(null);
+  const [noEncontrado, setNoEncontrado] = useState(false);
 
-  const { data: order, isLoading, isError, refetch } = useQuery({
-    queryKey: ['order-tracking', searchedId],
-    queryFn: async () => (await api.get(`/orders/${searchedId}/tracking`)).data,
-    enabled: !!searchedId,
-  });
+  const recientes = pedidosRecientes();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (orderId.trim()) {
-      setSearchedId(orderId.trim());
-    }
+  const buscar = (valor: string) => {
+    setBuscado(valor);
+    const encontrado = valor.trim() ? buscarPedido(valor) : null;
+    setPedido(encontrado);
+    setNoEncontrado(Boolean(valor.trim()) && !encontrado);
   };
 
-  const getStepIndex = (estado: string) => {
-    if (estado === 'entregado') return 2;
-    if (estado === 'enviado') return 1;
-    if (estado === 'pagado' || estado === 'pendiente') return 0;
-    return -1;
-  };
+  const pasoActual = pedido ? ESTADOS[pedido.estado].paso : -1;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
-      <h1 className="font-script text-4xl text-morado-oscuro text-center mb-8">Seguimiento de Pedido 📦</h1>
+      <h1 className="font-script text-4xl text-morado-oscuro text-center mb-2">Seguimiento de Pedido 📦</h1>
+      <p className="text-center text-sm text-gray-500 mb-8">
+        Tus pedidos se guardan en este navegador, así que no necesitas cuenta.
+        ¿Pediste por WhatsApp y no tienes el ID? Escríbenos al{' '}
+        <a href={`tel:${CONTACTO.telefono}`} className="text-rosa-pastel font-semibold">{CONTACTO.telefonoVisible}</a>.
+      </p>
 
-      {!user && (
-        <p className="text-center text-sm text-gray-500 mb-6">
-          Puedes buscar tu pedido sin iniciar sesión. También{' '}
-          <Link to="/login" className="text-rosa-pastel font-semibold">
-            inicia sesión
-          </Link>{' '}
-          para ver todos tus pedidos.
-        </p>
-      )}
-
-      <form onSubmit={handleSubmit} className="flex gap-2 max-w-md mx-auto mb-8">
+      <form
+        onSubmit={e => { e.preventDefault(); buscar(orderId); }}
+        className="flex gap-2 max-w-md mx-auto mb-8"
+      >
         <input
           value={orderId}
-          onChange={(e) => setOrderId(e.target.value)}
-          placeholder="ID de tu orden (ej: a1b2c3d4...)"
+          onChange={e => setOrderId(e.target.value)}
+          placeholder="ID de tu pedido (ej: DE-7K2M)"
           className="flex-1 border border-pink-100 rounded-full px-4 py-2 outline-none focus:border-lila"
           required
+          aria-label="ID del pedido"
         />
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="bg-gradient-to-r from-rosa-pastel to-lila text-white px-6 py-2 rounded-full font-semibold"
-        >
-          {isLoading ? 'Buscando...' : 'Buscar'}
+        <button type="submit" className="bg-gradient-to-r from-rosa-pastel to-lila text-white px-6 py-2 rounded-full font-semibold">
+          Buscar
         </button>
       </form>
 
-      {isError && (
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center text-red-500"
-        >
-          Pedido no encontrado. Verifica el ID e intenta nuevamente.
-        </motion.p>
+      {noEncontrado && (
+        <div className="bg-white rounded-[24px] border border-pink-100 shadow-soft p-8 text-center mb-8">
+          <p className="text-4xl">🔍</p>
+          <h2 className="font-script text-2xl text-morado-oscuro mt-3">No encontramos el pedido {buscado}</h2>
+          <p className="text-gray-500 mt-2 text-sm">
+            Revisa el ID (empieza con <span className="font-mono">DE-</span>) o contáctanos por WhatsApp con tu nombre y teléfono.
+          </p>
+          <a href={WHATSAPP_GENERAL} target="_blank" rel="noopener noreferrer" className="inline-block mt-4 bg-gradient-to-r from-rosa-pastel to-lila text-white px-6 py-2.5 rounded-full font-semibold">
+            Consultar por WhatsApp 💬
+          </a>
+        </div>
       )}
 
-      {order && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
-        >
-          {/* Status timeline */}
+      {pedido && (
+        <div className="space-y-6">
           <div className="bg-white rounded-[24px] p-6 shadow-soft border border-pink-50">
-            <h3 className="font-semibold text-morado-oscuro mb-4">Estado del envío</h3>
-
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-gray-500">Estado actual</span>
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-semibold text-white ${statusColors[order.estado] || 'bg-gray-400'}`}
-              >
-                {order.estado}
-              </span>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <h3 className="font-semibold text-morado-oscuro">Estado del envío</h3>
+              <span className="font-mono text-sm text-gray-500">{pedido.id}</span>
             </div>
 
-            <div className="flex items-center gap-2 mb-4">
-              {statusSteps.map((step, idx) => {
-                const currentStep = getStepIndex(order.estado);
-                const isActive = idx <= currentStep;
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              {PASOS.map((step, idx) => {
+                const activo = idx <= pasoActual;
                 return (
                   <div key={step.key} className="flex items-center gap-2">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-all ${
-                        isActive ? 'bg-gradient-to-r from-rosa-pastel to-lila scale-110' : 'bg-gray-200 text-gray-500'
-                      }`}
-                    >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-all ${activo ? 'bg-gradient-to-r from-rosa-pastel to-lila scale-110' : 'bg-gray-200 text-gray-500'}`}>
                       {idx + 1}
                     </div>
-                    <span
-                      className={`text-sm ${isActive ? 'text-morado-oscuro font-semibold' : 'text-gray-400'}`}
-                    >
-                      {step.label}
-                    </span>
-                    {idx < statusSteps.length - 1 && (
-                      <div
-                        className={`h-0.5 w-12 transition-colors ${
-                          isActive ? 'bg-gradient-to-r from-rosa-pastel to-lila' : 'bg-gray-200'
-                        }`}
-                      />
-                    )}
+                    <span className={`text-sm ${activo ? 'text-morado-oscuro font-semibold' : 'text-gray-400'}`}>{step.label}</span>
+                    {idx < PASOS.length - 1 && <div className={`h-0.5 w-8 sm:w-12 ${idx < pasoActual ? 'bg-gradient-to-r from-rosa-pastel to-lila' : 'bg-gray-200'}`} />}
                   </div>
                 );
               })}
             </div>
 
-            {order.trackingNumber && (
-              <div className="bg-lavanda-blush rounded-2xl p-4 text-center">
-                <p className="text-sm text-morado-oscuro font-semibold mb-1">Número de tracking</p>
-                <p className="font-mono text-lg text-morado-oscuro break-all">{order.trackingNumber}</p>
-                {order.trackingCarrier && (
-                  <p className="text-xs text-gray-500 mt-1">Carrier: {order.trackingCarrier}</p>
-                )}
-              </div>
-            )}
+            <div className="bg-lavanda-blush rounded-2xl p-4 text-sm text-morado-oscuro space-y-1">
+              <p><strong>Estado actual:</strong> {ESTADOS[pedido.estado].label}</p>
+              <p><strong>Cliente:</strong> {pedido.cliente.nombre} · {pedido.cliente.telefono}</p>
+              <p><strong>Entrega:</strong> {pedido.cliente.direccion}, {pedido.cliente.municipio}, {pedido.cliente.departamento}</p>
+              <p><strong>Pago:</strong> {pedido.cliente.metodo}</p>
+              <p className="text-xs text-gray-500 pt-1">
+                Este estado lo controlamos por WhatsApp: escríbenos con el ID para actualizarlo.
+              </p>
+            </div>
+
+            <a href={enlacePedidoWhatsApp(pedido)} target="_blank" rel="noopener noreferrer" className="block text-center mt-4 bg-gradient-to-r from-rosa-pastel to-lila text-white py-2.5 rounded-full font-semibold">
+              Consultar este pedido por WhatsApp 💬
+            </a>
           </div>
 
-          {/* Order details */}
           <div className="bg-white rounded-[24px] p-6 shadow-soft border border-pink-50">
-            <h3 className="font-semibold text-morado-oscuro mb-4">Detalles del pedido</h3>
-            <p className="text-sm text-gray-500">
-              Fecha: {new Date(order.createdAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
-            <p className="text-sm text-gray-500">Total: ${order.total.toFixed(2)}</p>
-            <p className="text-sm text-gray-500">Método de pago: {order.metodoPago}</p>
-            {order.direccionEnvio && <p className="text-sm text-gray-500 mt-1">Dirección: {order.direccionEnvio}</p>}
-          </div>
-
-          {/* Items */}
-          <div className="bg-white rounded-[24px] p-6 shadow-soft border border-pink-50">
-            <h3 className="font-semibold text-morado-oscuro mb-4">Productos</h3>
-            <div className="space-y-2 text-sm">
-              {order.items.map((item: any) => (
-                <div key={item.id} className="flex justify-between">
-                  <span>{item.nombre || item.product?.nombre || 'Producto'} x{item.cantidad}</span>
-                  <span>${item.subtotal.toFixed(2)}</span>
+            <h3 className="font-semibold text-morado-oscuro mb-3">Tu pedido</h3>
+            <div className="divide-y divide-pink-50 text-sm">
+              {pedido.items.map(i => (
+                <div key={i.product_id} className="flex justify-between py-2 gap-3">
+                  <span>{i.cantidad}x {i.nombre}</span>
+                  <span className="font-semibold">${(i.precio * i.cantidad).toFixed(2)}</span>
                 </div>
               ))}
+              <div className="flex justify-between py-2"><span>Envío {pedido.envio === 0 ? '(gratis 🎉)' : ''}</span><span>${pedido.envio.toFixed(2)}</span></div>
+              <div className="flex justify-between py-2 font-bold text-morado-oscuro"><span>Total</span><span>${pedido.total.toFixed(2)}</span></div>
             </div>
           </div>
-        </motion.div>
+        </div>
       )}
 
-      {!order && !isError && !searchedId && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center text-gray-400 mt-12"
-        >
-          Ingresa el ID de tu orden para ver el estado de tu envío.
-          <br />
-          <span className="text-xs">Lo encuentras en el email de confirmación de tu compra.</span>
-        </motion.div>
+      {!pedido && !noEncontrado && recientes.length > 0 && (
+        <div className="bg-white rounded-[24px] p-6 shadow-soft border border-pink-50">
+          <h3 className="font-semibold text-morado-oscuro mb-3">Tus pedidos recientes 💜</h3>
+          <ul className="divide-y divide-pink-50 text-sm">
+            {recientes.map(p => (
+              <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                <span className="font-mono">{p.id}</span>
+                <span className="text-gray-500">{new Date(p.creado).toLocaleDateString('es-SV')}</span>
+                <span className="font-semibold">${p.total.toFixed(2)}</span>
+                <span className="bg-lavanda-blush text-morado-oscuro px-3 py-1 rounded-full text-xs">{ESTADOS[p.estado].label}</span>
+                <button onClick={() => { setOrderId(p.id); buscar(p.id); }} className="text-rosa-pastel font-medium">Ver →</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {!pedido && !noEncontrado && recientes.length === 0 && (
+        <div className="bg-white rounded-[24px] p-10 text-center shadow-soft border border-pink-50">
+          <p className="text-5xl">🍓</p>
+          <h2 className="font-script text-2xl text-morado-oscuro mt-3">Aún no tienes pedidos aquí</h2>
+          <p className="text-gray-500 mt-2 text-sm">Cuando hagas un pedido en este navegador aparecerá su ID y podrás seguirlo.</p>
+          <Link to="/catalogo" className="inline-block mt-5 bg-gradient-to-r from-rosa-pastel to-lila text-white px-6 py-2.5 rounded-full font-semibold">Ir al Catálogo</Link>
+        </div>
       )}
     </div>
   );

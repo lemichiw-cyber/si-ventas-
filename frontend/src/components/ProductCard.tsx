@@ -1,16 +1,13 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useCart } from '../store/useCart';
-import api from '../lib/api';
 import FallbackImg from './FallbackImg';
 
 export default function ProductCard({ p, index = 0 }: { p: any; index?: number }) {
   const add = useCart(s => s.addItem);
-  const handleAdd = async () => {
+  // El carrito vive en el navegador (localStorage): no hace falta servidor.
+  const handleAdd = () => {
     add({ product_id: p.id, cantidad: 1, precio_snapshot: p.precio, nombre: p.nombre, imagen: p.imagenPrincipal });
-    try {
-      await api.post('/cart/items', { productId: p.id, cantidad: 1 });
-    } catch {}
   };
   return (
     <motion.div

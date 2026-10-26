@@ -5,7 +5,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd());
   return {
     plugins: [react()],
+    // La web se publica en https://lemichiw-cyber.github.io/si-ventas-/
     base: env.VITE_BASE || '/',
-    server: { port: 5173, proxy: { '/api': 'http://localhost:4000' } },
   };
 });

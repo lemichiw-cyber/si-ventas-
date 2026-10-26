@@ -1,25 +1,30 @@
 import { useQuery } from '@tanstack/react-query';
-import api from '../lib/api';
+import { listarProductos } from '../lib/catalog';
 import ProductCard from '../components/ProductCard';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
+import { WHATSAPP_GENERAL } from '../lib/tienda';
 
 export default function Home() {
-  const { data: featured } = useQuery({
+  const {
+    data: featured,
+    isPending: cargandoDestacados,
+    isError: errorDestacados,
+  } = useQuery({
     queryKey: ['products', 'home'],
-    queryFn: async () => (await api.get('/products?limit=8&recomendados=true')).data,
+    queryFn: () => listarProductos({ limit: 8, recomendados: true }),
   });
   const { data: novedades } = useQuery({
     queryKey: ['novedades'],
-    queryFn: async () => (await api.get('/products?novedades=true')).data,
+    queryFn: () => listarProductos({ novedades: true }),
   });
 
   const trustBar = [
     { icon: '🚚', title: 'Envío Gratis', desc: 'A partir de $25 USD' },
     { icon: '⚡', title: 'Entrega Rápida', desc: '24-48h hábiles' },
     { icon: '🌿', title: '100% Natural', desc: 'Sin conservadores' },
-    { icon: '🔒', title: 'Pago Seguro', desc: 'AES-256 encriptado' },
+    { icon: '💳', title: 'Pago Flexible', desc: 'Contra entrega o transferencia, sin datos de tarjeta en línea.' },
     { icon: '💯', title: 'Garantía', desc: 'Satisfacción o reembolsamos' },
   ];
 
@@ -49,7 +54,7 @@ export default function Home() {
     },
     {
       q: '¿Qué métodos de pago aceptan?',
-      a: 'Aceptamos tarjetas de crédito/déébito (Stripe y PayPal) y contraentrega en la entrega.',
+      a: 'Aceptamos pago contra entrega (efectivo o tarjeta) y transferencia con Daviplata o Bacredomatic. El pago se coordina por WhatsApp cuando confirmamos tu pedido.',
     },
     {
       q: '¿Puedo personalizar mi pedido?',
@@ -58,6 +63,7 @@ export default function Home() {
   ];
 
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [suscrito, setSuscrito] = useState(false);
 
   return (
     <div>
@@ -198,24 +204,43 @@ export default function Home() {
           </Link>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-          {featured?.data?.map((p: any, i: number) => (
+          {cargandoDestacados &&
+            [0, 1, 2, 3].map(i => (
+              <div key={i} className="bg-white rounded-[24px] shadow-soft overflow-hidden border border-pink-50 animate-pulse">
+                <div className="h-52 bg-lavanda-blush" />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-lavanda-blush rounded-full w-3/4" />
+                  <div className="h-3 bg-lavanda-blush rounded-full w-full" />
+                  <div className="h-8 bg-lavanda-blush rounded-full w-1/2" />
+                </div>
+              </div>
+            ))}
+
+          {errorDestacados && (
+            <div className="sm:col-span-2 lg:col-span-4 bg-white rounded-[24px] border border-pink-100 shadow-soft p-8 text-center">
+              <p className="text-4xl">🫠</p>
+              <h3 className="font-script text-2xl text-morado-oscuro mt-3">No pudimos cargar las delicias</h3>
+              <p className="text-gray-500 mt-2">Parece un problema de conexión. Recarga la página o escríbenos por WhatsApp y te ayudamos a elegir.</p>
+            </div>
+          )}
+
+          {featured?.map((p: any, i: number) => (
             <ProductCard key={p.id} p={p} index={i} />
           ))}
-          {!featured && <p className="text-gray-400">Cargando delicias...</p>}
         </div>
-        {featured && featured.data?.length === 0 && (
+        {featured && featured.length === 0 && !cargandoDestacados && !errorDestacados && (
           <p className="text-center text-gray-400 mt-8">No hay productos destacados ahorita. ¡Vuelve pronto!</p>
         )}
       </section>
 
       {/* Novedades */}
-      {novedades?.data?.length > 0 && (
+      {novedades && novedades.length > 0 && (
         <section className="bg-gradient-to-r from-rosa-pastel/20 via-lila/20 to-dorado/10 border-y border-pink-100 py-10 mt-8">
           <div className="max-w-7xl mx-auto px-4 text-center">
             <h2 className="font-script text-3xl text-morado-oscuro">¡Novedades! ✨</h2>
             <p className="text-gray-500 mt-1">Nuevos sabores artesanales, recetas y temporadas</p>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 max-w-4xl mx-auto">
-              {novedades.data.map((p: any, i: number) => (
+              {novedades.map((p: any, i: number) => (
                 <ProductCard key={p.id} p={p} index={i} />
               ))}
             </div>
@@ -288,26 +313,32 @@ export default function Home() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              alert('¡Gracias por suscribirte! Te llegará tu código de descuento al email. 💖');
+              setSuscrito(true);
             }}
-            className="flex gap-2 mt-6 max-w-md mx-auto"
+            className="flex flex-col sm:flex-row gap-2 mt-6 max-w-md mx-auto"
           >
             <input
               type="email"
               placeholder="tu@email.com"
-              className="flex-1 px-4 py-3 rounded-full text-morado-oscuro outline-none"
+              className="flex-1 min-w-0 px-4 py-3 rounded-full text-morado-oscuro outline-none"
               required
+              aria-label="Tu correo electrónico"
             />
             <button className="bg-white text-morado-oscuro px-6 py-3 rounded-full font-semibold">
               Suscribirme
             </button>
           </form>
+          {suscrito && (
+            <p className="mt-3 text-sm bg-white/25 rounded-full px-4 py-2 inline-block" role="status">
+              ¡Lista! Te avisaremos por WhatsApp con el código de bienvenida 💖
+            </p>
+          )}
         </div>
       </section>
 
       {/* Floating WhatsApp Chat */}
       <motion.a
-        href="https://wa.me/50370123456?text=Quiero%20pedir%20mermeladas%20de%20Dulce%20Encanto%20🍓"
+        href={WHATSAPP_GENERAL}
         target="_blank"
         rel="noopener noreferrer"
         initial={{ scale: 0 }}

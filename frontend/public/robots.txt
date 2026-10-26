@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://lemichiw-cyber.github.io/si-ventas-/sitemap.xml

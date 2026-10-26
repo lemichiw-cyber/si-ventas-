@@ -1,11 +1,13 @@
 import { useCart } from '../store/useCart';
 import { Link, useNavigate } from 'react-router-dom';
 import FallbackImg from '../components/FallbackImg';
+import { ENVIO, calcularEnvio } from '../lib/tienda';
 
 export default function Cart() {
   const { items, updateQty, removeItem, total } = useCart();
   const navigate = useNavigate();
-  const shipping = items.length ? 2.5 : 0;
+  const shipping = calcularEnvio(total());
+  const faltaParaEnvioGratis = shipping > 0 ? ENVIO.gratisDesde - total() : 0;
 
   if (items.length === 0) return (
     <div className="max-w-2xl mx-auto px-4 py-16 text-center">
@@ -41,10 +43,16 @@ export default function Cart() {
           <h3 className="font-semibold text-morado-oscuro">Resumen</h3>
           <div className="space-y-2 text-sm mt-4">
             <div className="flex justify-between"><span>Subtotal</span><span>${total().toFixed(2)}</span></div>
-            <div className="flex justify-between"><span>Envío estimado</span><span>${shipping.toFixed(2)}</span></div>
+            <div className="flex justify-between"><span>Envío estimado</span><span>{shipping === 0 ? '¡Gratis! 🎉' : `$${shipping.toFixed(2)}`}</span></div>
             <div className="border-t pt-2 flex justify-between font-bold text-morado-oscuro"><span>Total</span><span>${(total() + shipping).toFixed(2)}</span></div>
           </div>
-          <button onClick={() => navigate('/checkout')} className="w-full mt-6 bg-gradient-to-r from-rosa-pastel to-lila text-white py-3 rounded-full font-semibold">Continuar al Pago →</button>
+          {faltaParaEnvioGratis > 0 && (
+            <p className="text-xs text-morado-oscuro bg-lavanda-blush rounded-xl px-3 py-2 mt-3">
+              🚚 Agrega ${faltaParaEnvioGratis.toFixed(2)} más y el envío te sale gratis.
+            </p>
+          )}
+          <button onClick={() => navigate('/checkout')} className="w-full mt-6 bg-gradient-to-r from-rosa-pastel to-lila text-white py-3 rounded-full font-semibold">Continuar al Pedido →</button>
+          <p className="text-xs text-gray-400 text-center mt-3">Confirmamos tu pedido por WhatsApp 💬</p>
           <Link to="/catalogo" className="block text-center text-sm text-rosa-pastel mt-3">← Seguir comprando</Link>
         </div>
       </div>
